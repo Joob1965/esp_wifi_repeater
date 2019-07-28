@@ -1,186 +1,188 @@
 # esp_wifi_repeater
-A full functional WiFi repeater (correctly: a WiFi NAT router)
+Ein voll funktionsfähiger WLAN-Repeater (richtig: ein WLAN-NAT-Router)
 
-This is an implementation of a WiFi NAT router on the esp8266 and esp8285. It also includes support for a packet filtering firewall with ACLs, port mapping, traffic shaping, hooks for remote monitoring (or packet sniffing), an MQTT management interface, and power management. For a setup with multiple routers in a mesh to cover a larger area a new mode "Automesh" has been included https://github.com/martin-ger/esp_wifi_repeater#automesh-mode .
+Dies ist die Implementierung eines WiFi-NAT-Routers auf dem esp8266 und esp8285. Es enthält auch Unterstützung für eine Paketfilter-Firewall mit ACLs, Port-Mapping, Traffic-Shaping, Hooks für Remote-Überwachung (oder Paket-Sniffing), MQTT-Verwaltungsschnittstelle und Energieverwaltung. Automesh wurde aufgenommen https://github.com/martin-ger/esp_wifi_repeater#automesh-mode .
 
-Typical usage scenarios include:
-- Simple range extender for an existing WiFi network
-- Battery powered outdoor (mesh) networks
-- Setting up an additional WiFi network with different SSID/password for guests
-- Setting up a secure and restricted network for IoT devices
-- Monitor probe for WiFi traffic analysis
-- Network experiments with routes, ACLs and traffic shaping
+Typische Nutzungsszenarien sind:
+- Einfacher Range Extender für ein vorhandenes WiFi-Netzwerk
+- Batteriebetriebene Außennetze (Mesh-Netze)
+- Einrichten eines zusätzlichen WiFi-Netzwerks mit unterschiedlichen SSIDs / Passwörtern für Gäste
+- Einrichten eines sicheren und eingeschränkten Netzwerks für IoT-Geräte
+- Überwachen Sie die Sonde für die WiFi-Verkehrsanalyse
+- Netzexperimente mit Routen, ACLs und Traffic Shaping
 
-By default, the ESP acts as STA and as soft-AP and transparently forwards any IP traffic through it. As it uses NAT no routing entries are required neither on the network side nor on the connected stations. Stations are configured via DHCP by default in the 192.168.4.0/24 net and receive their DNS responder address from the existing WiFi network.
+Standardmäßig fungiert der ESP als STA und als Soft-AP und leitet den IP-Verkehr transparent weiter. Da NAT verwendet wird, sind weder auf der Netzwerkseite noch auf den angeschlossenen Stationen Routing-Einträge erforderlich. Stationen werden standardmäßig über DHCP im Netzwerk 192.168.4.0/24 konfiguriert und erhalten ihre DNS-Antwortadresse vom vorhandenen WLAN-Netzwerk.
 
-Measurements show, that it can achieve about 5 Mbps in both directions, so even streaming is possible.
+Messungen zeigen, dass es ungefähr 5 Mbit / s in beide Richtungen erreichen kann, so dass sogar Streaming möglich ist.
 
-Some details are explained in this video: https://www.youtube.com/watch?v=OM2FqnMFCLw
+Einige Details werden in diesem Video erklärt: https://www.youtube.com/watch?v=OM2FqnMFCLw
 
-### Note on WPA2 enterprise (PEAP)
-If you need a "converter" that translates a WPA2 enterprise network with PEAP authentication into a WPA2-PSK network, have a look at https://github.com/martin-ger/esp_peap_psk . Was trying to integrate this functionality into this project - however this is difficult, as WPA2 enterprise requires so much free heap during authentication that there is hardly any mem left for anything else. So I decided to leave that in a separate project.
+### Hinweis zu WPA2 Enterprise (PEAP)
+Wenn Sie einen "Konverter" benötigen, der ein WPA2-Unternehmensnetzwerk mit PEAP-Authentifizierung in ein WPA2-PSK-Netzwerk übersetzt, besuchen Sie https://github.com/martin-ger/esp_peap_psk. Ich habe versucht, diese Funktionalität in dieses Projekt zu integrieren. Dies ist jedoch schwierig, da WPA2 Enterprise bei der Authentifizierung so viel freien Heap benötigt, dass für nichts anderes mehr Speicherplatz vorhanden ist. Also habe ich beschlossen, das in einem separaten Projekt zu belassen.
 
-# First Boot
-The esp_wifi_repeater starts with the following default configuration:
+# Erstes Booten
+Der esp_wifi_repeater startet mit der folgenden Standardkonfiguration:
 
 - ap_ssid: MyAP, ap_password: none, ap_on: 1, ap_open: 1
-- network: 192.168.4.0/24
+- Netzwerk: 192.168.4.0/24
 
-After first boot (or factory reset) it will offer a WiFi network with an open AP and the ssid "MyAP". It does not yet try to automatically re-connect to an uplink AP (as it does not know a valid ssid or password).
+Nach dem ersten Booten (oder Zurücksetzen auf die Werkseinstellungen) wird ein WiFi-Netzwerk mit einem offenen AP und der ssid "MyAP" angeboten. Es wird noch nicht versucht, die Verbindung zu einem Uplink-AP automatisch wiederherzustellen (da es keine gültige SSID oder kein gültiges Kennwort kennt).
 
-Connect to this WiFi network and do the basic configuration either via a simple web interface or the full config with all options via the console. 
+Stellen Sie eine Verbindung zu diesem WiFi-Netzwerk her und nehmen Sie die Grundkonfiguration entweder über ein einfaches Webinterface oder die vollständige Konfiguration mit allen Optionen über die Konsole vor.
 
-# Basic Web Config Interface
-The web interface allows for the configuration of all parameters required for the basic forwarding functionality. Thanks to rubfi for the major work on that: https://github.com/rubfi/esp_wifi_repeater/ . Point your browser to "http://192.168.4.1". This page should appear:
+# Grundlegende Webkonfigurationsoberfläche
+Das Webinterface ermöglicht die Konfiguration aller Parameter, die für die grundlegende Weiterleitungsfunktionalität erforderlich sind. Vielen Dank an rubfi für die umfangreiche Arbeit daran: https://github.com/rubfi/esp_wifi_repeater/. Zeigen Sie mit Ihrem Browser auf "http://192.168.4.1". Diese Seite sollte erscheinen:
 
-<img src="https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/WebConfig.jpg">
+<img src = "https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/WebConfig.jpg">
 
-First enter the appropriate values for the uplink WiFi network, the "STA Settings". Use password "none" for open networks. Check the "Automesh" box if and only if you really want to use the automesh mode. Click "Connect". The ESP reboots and will connect to your WiFi router. The status LED should be blinking after some seconds.
+Geben Sie zuerst die entsprechenden Werte für das Uplink-WLAN-Netzwerk ein, die "STA-Einstellungen". Verwenden Sie für offene Netzwerke das Passwort "none". Aktivieren Sie das Kontrollkästchen "Automesh", wenn Sie den Automesh-Modus wirklich verwenden möchten. Klicken Sie auf "Verbinden". Der ESP startet neu und stellt eine Verbindung zu Ihrem WLAN-Router her. Die Status-LED sollte nach einigen Sekunden blinken.
 
-If you have selected automesh, you are done with config. Configuring the "Soft AP Settings" is not required as in automesh mode these settings are identical to the "STA Settings". The same ssid will be offered by all connected ESP repeaters.
+Wenn Sie automesh ausgewählt haben, ist die Konfiguration abgeschlossen. Das Konfigurieren der "Soft AP-Einstellungen" ist nicht erforderlich, da diese Einstellungen im Automesh-Modus mit den "STA-Einstellungen" identisch sind. Die gleiche SSID wird von allen angeschlossenen ESP-Repeatern angeboten.
 
-If you are not using automesh, you can now reload the page and change the "Soft AP Settings". Click "Set" and again the ESP reboots. Now it is ready for forwarding traffic over the newly configured Soft AP. Be aware that these changes also affect the config interface, i.e. to do further configuration, connect to the ESP through one of the newly configured WiFi networks. For access through the Soft AP remember the address of the Soft APs network if you have changed that (the ESP has always the address x.x.x.1 in this network).
+Wenn Sie nicht automesh verwenden, können Sie jetzt die Seite neu laden und die "Soft AP-Einstellungen" ändern. Klicken Sie auf "Einstellen" und der ESP startet erneut neu. Jetzt kann der Datenverkehr über den neu konfigurierten Soft AP weitergeleitet werden. Beachten Sie, dass sich diese Änderungen auch auf die Konfigurationsschnittstelle auswirken. Wenn Sie weitere Konfigurationsschritte ausführen möchten, stellen Sie über eines der neu konfigurierten WLAN-Netzwerke eine Verbindung zum ESP her. Für den Zugriff über den Soft-AP muss die Adresse des Soft-AP-Netzwerks gespeichert werden, wenn Sie diese geändert haben (der ESP hat in diesem Netzwerk immer die Adresse x.x.x.1).
 
-If you like, you can mark the "lock" checkbox and click "Lock". Now the config cannot be changed anymore without first unlocking it with the uplink WiFi network's password (define one even if the network is open).
+Wenn Sie möchten, können Sie das Kontrollkästchen "Sperren" markieren und auf "Sperren" klicken. Jetzt kann die Konfiguration nicht mehr geändert werden, ohne sie zuvor mit dem Kennwort des Uplink-WLAN-Netzwerks zu entsperren (definieren Sie eines, auch wenn das Netzwerk geöffnet ist).
 
-If you want to enter non-ASCII or special characters in the web interface you have to use HTTP-style hex encoding like "My%20AccessPoint". This will result in a string "My AccessPoint". With this hex encoding you can enter any byte value you like, except for 0 (for C-internal reasons).
+Wenn Sie Nicht-ASCII- oder Sonderzeichen in die Weboberfläche eingeben möchten, müssen Sie eine Hex-Codierung im HTTP-Stil wie "My% 20AccessPoint" verwenden. Dies führt zu einer Zeichenfolge "My AccessPoint". Mit dieser Hex-Codierung können Sie einen beliebigen Byte-Wert eingeben, mit Ausnahme von 0 (aus C-internen Gründen).
 
-If you did a mistake and you lost any contact with the ESP you can still use the serial console to recover it ("reset facory", see below).
+Wenn Sie einen Fehler gemacht haben und den Kontakt mit dem ESP verloren haben, können Sie ihn weiterhin über die serielle Konsole wiederherstellen ("Zurücksetzen des Geräts", siehe unten).
 
-# Command Line Interface
-Advanced configuration has to be done via the command line on the console interface. This console is available either via the serial port at 115200 baud or via tcp port 7777 (e.g. "telnet 192.168.4.1 7777" from a connected STA).
+# Befehlszeilenschnittstelle
+Die erweiterte Konfiguration muss über die Befehlszeile auf der Konsolenoberfläche erfolgen. Diese Konsole ist entweder über den seriellen Port mit 115200 Baud oder über den TCP-Port 7777 (z. B. "telnet 192.168.4.1 7777" von einer angeschlossenen STA) verfügbar.
 
-Use the following commands for an initial setup:
-- set ssid your_home_router's_SSID
-- set password your_home_router's_password
-- set ap_ssid ESP's_ssid
-- set ap_password ESP's_password
-- show (to check the parameters)
-- save
-- reset
+Verwenden Sie die folgenden Befehle für eine Erstkonfiguration:
+- ssid your_home_router's_SSID setzen
+- Setzen Sie das Passwort für Ihr_Home_Router-Passwort
+- setze ap_ssid ESP's_ssid
+- ap_password setzen ESP's_password
+- show (um die Parameter zu überprüfen)
+- sparen
+- zurücksetzen
 
-Again, if you want to enter non-ASCII or special characters you can use HTTP-style hex encoding (e.g. "My%20AccessPoint") or, only on the CLI, as shortcut C-style quotes with backslash (e.g. "My\ AccessPoint"). Both methods will result in a string "My AccessPoint".
+Wenn Sie Nicht-ASCII- oder Sonderzeichen eingeben möchten, können Sie die Hex-Codierung im HTTP-Stil (z. B. "My% 20AccessPoint") oder nur auf der CLI als Verknüpfung mit Anführungszeichen im C-Stil (z. B. "My \ AccessPoint") verwenden "). Beide Methoden führen zu einer Zeichenfolge "My AccessPoint".
 
-The command line understands a lot more commands:
+Die Kommandozeile versteht viel mehr Befehle:
 
-## Basic Commands
-Enough to get it working in nearly all environments.
-- help: prints a short help message
-- set [ssid|password] _value_: changes the settings for the uplink AP (WiFi config of your home-router), use password "none" for open networks.
-- set [ap_ssid|ap_password] _value_: changes the settings for the soft-AP of the ESP (for your stations)
-- show [config|stats]: prints the current config or some status information and statistics
-- save [dhcp]: saves the current config parameters, ACLs, and routing entires [+ the current DHCP leases] to flash
-- lock [_password_]: saves and locks the current config, changes are not allowed. Password can be left open if already set before (Default is the password of the uplink WiFi)
-- unlock _password_: unlocks the config, requires password from the lock command
-- reset [factory]: resets the esp, 'factory' optionally resets WiFi params to default values (works on a locked device only from serial console)
-- quit: terminates a remote session
+## Grundlegende Befehle
+Genug, um es in fast allen Umgebungen zum Laufen zu bringen.
+- help: Gibt eine kurze Hilfemeldung aus
+- set [ssid | password] _value_: Ändert die Einstellungen für den Uplink-AP (WiFi-Konfiguration Ihres Home-Routers) und verwendet das Passwort "none" für offene Netzwerke.
+- set [ap_ssid | ap_password] _value_: Ändert die Einstellungen für den Soft-AP des ESP (für Ihre Stationen)
+- show [config | stats]: Druckt die aktuelle Konfiguration oder einige Statusinformationen und Statistiken
+- save [dhcp]: Speichert die aktuellen Konfigurationsparameter, ACLs und Routing-Einträge [+ die aktuellen DHCP-Leases] zum Flashen
+- lock [_password_]: speichert und sperrt die aktuelle Konfiguration, Änderungen sind nicht erlaubt. Das Passwort kann offen gelassen werden, wenn es bereits zuvor festgelegt wurde (Standard ist das Passwort des Uplink-WLANs).
+- unlock _password_: Entsperrt die Konfiguration, erfordert ein Passwort vom Befehl lock
+- reset [factory]: Setzt das esp zurück, 'factory' setzt optional WiFi-Parameter auf die Standardwerte zurück (funktioniert auf einem gesperrten Gerät nur über die serielle Konsole)
+- quit: Beendet eine Remote-Sitzung
 
-## Advanced Commands
-Most of the set-commands are effective only after save and reset.
+## Erweiterte Befehle
+Die meisten set-Befehle sind erst nach dem Speichern und Zurücksetzen wirksam.
 ### Automesh Config
-- set automesh [0|1]: selects, whether the automesh mode is on or off (default), see details here https://github.com/martin-ger/esp_wifi_repeater#automesh-mode
-- set am_threshold _dB_: sets the threshold for a "bad" connection (in negative dB, default 85, i.e. -85 dB) 
-- set am_scan_time _secs_: sets the time interval in seconds the ESP tries in automesh mode to find an uplink AP before going to sleep (0 disabled, default)
-- set am_sleep_time _secs_: sets the time interval in seconds the ESP sleeps in automesh mode if no uplink AP is found (0 disabled, default)
+- set automesh [0 | 1]: Legt fest, ob der Automesh-Modus aktiviert oder deaktiviert ist (Standardeinstellung). Weitere Informationen finden Sie unter https://github.com/martin-ger/esp_wifi_repeater#automesh-mode
+- set am_threshold _dB_: Legt den Schwellenwert für eine "schlechte" Verbindung fest (in negativen dB, Standard 85, d. h. -85 dB)
+- set am_scan_time _secs_: Legt das Zeitintervall in Sekunden fest, in dem der ESP im Automesh-Modus versucht, einen Uplink-AP zu finden, bevor er in den Ruhezustand wechselt (0 deaktiviert, Standard).
+- set am_sleep_time _secs_: Legt das Zeitintervall in Sekunden fest, in dem der ESP im Automesh-Modus schläft, wenn kein Uplink-AP gefunden wird (0 deaktiviert, Standard)
 
-### WiFi Config
-- set ap_on [0|1]: selects, whether the soft-AP is disabled (ap_on=0) or enabled (ap_on=1, default)
-- set ap_open [0|1]: selects, whether the soft-AP uses WPA2-PSK security (ap_open=0,  automatic, if an ap_password is set) or open (ap_open=1)
-- set auto_connect [0|1]: selects, whether the STA should keep retrying to reconnect to the AP. auto_connect is off (0) after first flashing or after "reset factory". When you enter a new SSID it will be automatically set on (1).
-- set ssid_hidden [0|1]: selects, whether the SSID of the soft-AP is hidden (ssid_hidden=1) or visible (ssid_hidden=0, default)
-- set phy_mode [1|2|3]: sets the PHY_MODE of the WiFi (1=b, 2=g, 3=n(default))
-- set bssid _xx:xx:xx:xx:xx:xx_: sets the specific BSSID of the uplink AP to connect to (default 00:00:00:00:00:00 which means any)
-- set [ap_mac|sta_mac] _xx:xx:xx:xx:xx:xx_: sets the MAC address of the STA and SOFTAP to a user defined value (bit 0 of the first byte of the MAC address can not be 1)
-- set sta_mac random: set a new random STA MAC after each reboot
-- set sta_hostname _name_: sets the name of the STA (visible to the uplink AP)
-- set max_clients [1-8]: sets the number of STAs that can connct to the SoftAP (limit of the ESP's SoftAP implementation is 8, default)
-- scan: does a scan for APs
-- connect: tries to connect to an AP with the currently configured _ssid_ and _password_
-- disconnect: disconnects from any uplink AP
+### WiFi Konfig
+- set ap_on [0 | 1]: Legt fest, ob der Soft-AP deaktiviert (ap_on = 0) oder aktiviert (ap_on = 1, Standard) ist.
+- set ap_open [0 | 1]: Auswahl, ob der Soft-AP WPA2-PSK-Sicherheit verwendet (ap_open = 0, automatisch, wenn ein ap_password gesetzt ist) oder offen (ap_open = 1)
+- set auto_connect [0 | 1]: Legt fest, ob die STA erneut versuchen soll, eine Verbindung zum AP herzustellen. auto_connect ist nach erstmaligem Blinken oder nach "reset factory" aus (0). Wenn Sie eine neue SSID eingeben, wird diese automatisch auf (1) gesetzt.
+- set ssid_hidden [0 | 1]: Auswahl, ob die SSID des Soft-AP versteckt (ssid_hidden = 1) oder sichtbar (ssid_hidden = 0, Standard) ist
+- set phy_mode [1 | 2 | 3]: setzt den PHY_MODE des WiFi (1 = b, 2 = g, 3 = n (Standard))
+- set bssid _xx: xx: xx: xx: xx: xx_: legt die spezifische BSSID des Uplink-APs fest, zu dem eine Verbindung hergestellt werden soll (Standardeinstellung 00: 00: 00: 00: 00: 00: 00, was any bedeutet)
+- set [ap_mac | sta_mac] _xx: xx: xx: xx: xx: xx_: setzt die MAC-Adresse der STA und SOFTAP auf einen benutzerdefinierten Wert (Bit 0 des ersten Bytes der MAC-Adresse kann nicht 1 sein)
+- set sta_mac random: Setzt nach jedem Neustart einen neuen zufälligen STA-MAC
+- set sta_hostname _name_: Legt den Namen der STA fest (sichtbar für den Uplink-AP)
+- set max_clients [1-8]: Legt die Anzahl der STAs fest, die eine Verbindung zum SoftAP herstellen können (das Limit der SoftAP-Implementierung des ESP ist 8, Standard)
+- scan: Sucht nach APs
+- connect: versucht eine Verbindung zu einem AP mit der aktuell konfigurierten _ssid_ und dem _password_ herzustellen
+- disconnect: Trennt die Verbindung zu einem Uplink-AP
 
-### TCP/IP Config
-- ping _ip-addr_: checks IP connectivity with ICMP echo request/reply
-- set network _ip-addr_: sets the IP address of the internal network, network is always /24, router is always x.x.x.1
-- set dns _dns-addr_: sets a static DNS address that is distributed to clients via DHCP
-- set dns dhcp: configures use of the dynamic DNS address from DHCP, default
-- set ip _ip-addr_: sets a static IP address for the STA interface
-- set ip dhcp: configures dynamic IP address for the STA interface, default
-- set netmask _netmask_: sets a static netmask for the STA interface
-- set gw _gw-addr_: sets a static gateway address for the STA interface
-- show dhcp: prints the current status of the dhcp lease table
+
+### TCP / IP Konfig
+- ping _ip-addr_: Überprüft die IP-Konnektivität mit der ICMP-Echoanforderung / -antwort
+- set network _ip-addr_: Legt die IP-Adresse des internen Netzwerks fest, Netzwerk ist immer / 24, Router ist immer x.x.x.1
+- set dns _dns-addr_: Legt eine statische DNS-Adresse fest, die über DHCP an die Clients verteilt wird
+- set dns dhcp: Konfiguriert die Verwendung der dynamischen DNS-Adresse von DHCP (Standardeinstellung)
+- set ip _ip-addr_: Legt eine statische IP-Adresse für die STA-Schnittstelle fest
+- set ip dhcp: Konfiguriert standardmäßig die dynamische IP-Adresse für die STA-Schnittstelle
+- set netmask _netmask_: Legt eine statische Netzmaske für die STA-Schnittstelle fest
+- set gw _gw-addr_: Legt eine statische Gateway-Adresse für die STA-Schnittstelle fest
+- show dhcp: Gibt den aktuellen Status der DHCP-Lease-Tabelle aus
+
 
 ### Routing
-- show route: displays the current routing table
-- route clear: clears all static routes
-- route add _network_ _gw_: adds a static route to a network (network given CIDR notation ('x.x.x.x/n')) via gateway gw
-- route delete _network_: removes a static route to a network
-- interface _inX_ [up|down]: sets the interface state up or down (no IP routing/traffic through down interfaces, default: up)
-- set nat [0|1]: selects, whether the soft-AP interface is NATed (nat=1, default) or not (nat=0). Without NAT transparent forwarding of traffic from the internal STAs doesn't work! Useful mainly in combination with static routing.
-- portmap add [TCP|UDP] _external_port_ _internal_ip_ _internal_port_: adds a port forwarding
-- portmap remove [TCP|UDP] _external_port_: deletes a port forwarding
+- Route anzeigen: Zeigt die aktuelle Routing-Tabelle an
+- route clear: Löscht alle statischen Routen
+- route add _network_ _gw_: Fügt über das Gateway gw eine statische Route zu einem Netzwerk hinzu (Netzwerk mit CIDR-Notation ('x.x.x.x / n')
+- route delete _network_: Entfernt eine statische Route zu einem Netzwerk
+- interface _inX_ [up | down]: Setzt den Schnittstellenstatus auf oder ab (kein IP-Routing / Datenverkehr über heruntergefahrene Schnittstellen, Standard: auf)
+- set nat [0 | 1]: Legt fest, ob die Soft-AP-Schnittstelle NAT-fähig ist (nat = 1, Standardeinstellung) oder nicht (nat = 0). Ohne NAT funktioniert die transparente Weiterleitung des Datenverkehrs von den internen STAs nicht! Nützlich hauptsächlich in Kombination mit statischem Routing.
+- portmap add [TCP | UDP] _external_port_ _internal_ip_ _internal_port_: Fügt eine Portweiterleitung hinzu
+- portmap remove [TCP | UDP] _external_port_: löscht eine Portweiterleitung
 
-### Firewall/Monitor Config
-- acl [from_sta|to_sta] [TCP|UDP|IP] _src-ip_ [_src_port_] _desr-ip_ [_dest_port_] [allow|deny|allow_monitor|deny_monitor]: adds a new rule to the ACL
-- acl [from_sta|to_sta] clear: clears the whole ACL
-- show acl: shows the defined ACLs and some stats
-- set acl_debug [0|1]: switches ACL debug output on/off - a denied packets will be logged to the terminal
-- set [upstream_kbps|downstream_kbps] _bitrate_: sets a maximum upstream/downstream bitrate (0 = no limit, default)
-- set daily_limit _limit_in_KB_: defined a max. amount of kilobytes that can be transfered by STAs per day (0 = no limit, default)
-- set timezone _hours_offset_: defines the local timezone (required to know, when a day is over at 00:00)
-- monitor [on|off|acl] _port_: starts and stops monitor server on a given port
+### Firewall / Monitor Konfig
+- acl [from_sta | to_sta] [TCP | UDP | IP] _src-ip_ [_src_port_] _desr-ip_ [_dest_port_] [allow | deny | allow_monitor | deny_monitor]: Fügt der ACL eine neue Regel hinzu
+- acl [from_sta | to_sta] clear: Löscht die gesamte ACL
+- show acl: Zeigt die definierten ACLs und einige Statistiken an
+- set acl_debug [0 | 1]: Schaltet die ACL-Debug-Ausgabe ein / aus. - Verweigerte Pakete werden im Terminal protokolliert
+- set [upstream_kbps | downstream_kbps] _bitrate_: Legt eine maximale Upstream / Downstream-Bitrate fest (0 = kein Limit, Standard)
+- set daily_limit _limit_in_KB_: definiert eine max. Anzahl der Kilobyte, die von STAs pro Tag übertragen werden können (0 = keine Begrenzung, Standard)
+- set timezone _hours_offset_: definiert die lokale Zeitzone (erforderlich, um zu wissen, wann ein Tag um 00:00 Uhr vorbei ist)
+- monitor [on | off | acl] _port_: Startet und stoppt den Überwachungsserver an einem bestimmten Port
 
 ### User Interface Config
-- set config_port _portno_: sets the port number of the console login (default is 7777, 0 disables remote console config)
-- set web_port _portno_: sets the port number of the web config server (default is 80, 0 disables web config)
-- set config_access _mode_: controls the networks that allow config access for console and web (0: no access, 1: only internal, 2: only external, 3: both (default))
+- set config_port _portno_: Legt die Portnummer für die Konsolenanmeldung fest (Standard ist 7777, 0 deaktiviert die Remote-Konsolenkonfiguration).
+- set web_port _portno_: Legt die Portnummer des Webkonfigurationsservers fest (Standard ist 80, 0 deaktiviert die Webkonfiguration)
+- set config_access _mode_: Steuert die Netzwerke, die den Konfigurationszugriff für Konsole und Web erlauben (0: kein Zugriff, 1: nur intern, 2: nur extern, 3: beide (Standard))
 
-### Chip Config
-- set speed [80|160]: sets the CPU clock frequency (default 80 Mhz)
-- sleep _seconds_: Put ESP into deep sleep for the specified amount of seconds. Valid values between 1 and 4294 (aprox. 71 minutes)
-- set status_led _GPIOno_: selects a GPIO pin for the status LED (default 2, >16 disabled)
-- set hw_reset _GPIOno_: selects a GPIO pin for a hardware factory reset (default 4, >16 disabled)
-- set ap_watchdog _secs_: sets the AP watchdog timeout - if there are no packets received for _secs_ from the uplink AP the repeater resets ("none" = no timeout, default)
-- set client_watchdog _secs_: sets the client watchdog timeout - if there are no packets received for _secs_ from any connected client the repeater resets ("none" = no timeout, default)
-- set vmin _voltage_: sets the minimum battery voltage in mV. If Vdd drops below, the ESP goes into deep sleep. If 0, nothing happens
-- set vmin_sleep _secs_: sets the time interval in seconds the ESP sleeps on low voltage
+### Chip Konfig
+- set speed [80 | 160]: Legt die CPU-Taktfrequenz fest (Standard 80 Mhz)
+- sleep _seconds_: Versetzt das ESP für die angegebene Anzahl von Sekunden in den Tiefschlaf. Gültige Werte zwischen 1 und 4294 (ca. 71 Minuten)
+- set status_led _GPIOno_: wählt einen GPIO-Pin für die Status-LED aus (Standard 2,> 16 deaktiviert)
+- set hw_reset _GPIOno_: wählt einen GPIO-Pin für einen Hardware-Werksreset aus (Standard 4,> 16 deaktiviert)
+- set ap_watchdog _secs_: Legt das Timeout für den AP-Watchdog fest. - Wenn vom Uplink-AP keine Pakete für _secs_ empfangen wurden, wird der Repeater zurückgesetzt ("none" = kein Timeout, Standard).
+- set client_watchdog _secs_: Legt das Zeitlimit für den Client-Watchdog fest. - Wenn von keinem verbundenen Client Pakete für _secs_ empfangen werden, wird der Repeater zurückgesetzt ("none" = kein Zeitlimit, Standard).
+- set vmin _voltage_: Stellt die minimale Batteriespannung in mV ein. Wenn der Vdd-Wert sinkt, geht das ESP in den Tiefschlaf. Wenn 0, passiert nichts
+- set vmin_sleep _secs_: Legt das Zeitintervall in Sekunden fest, in dem das ESP bei niedriger Spannung schläft
 
-# Status LED
-In default config GPIO2 is configured to drive a status LED (connected to GND) with the following indications:
-- permanently on: started, but not successfully connected to the AP (no valid external IP)
-- flashing (1 per second): working, connected to the AP
-- unperiodically flashing: working, traffic in the internal network
+# Status-LED
+In der Standardkonfiguration ist GPIO2 so konfiguriert, dass eine Status-LED (mit GND verbunden) mit den folgenden Anzeigen angesteuert wird:
+- permanent an: gestartet, aber nicht erfolgreich mit dem AP verbunden (keine gültige externe IP)
+- blinkend (1 pro Sekunde): funktioniert, ist mit dem AP verbunden
+- unregelmäßig blinkend: funktioniert, Datenverkehr im internen Netzwerk
 
-With "set status_led GPIOno" the GPIO pin can be changed (any value > 16, e.g. "set status_led 255" will disable the status LED completely). When configured to GPIO1, it works with the buildin blue LED on the ESP-01 boards. However, as GPIO1 ist also the UART-TX-pin this means, that the serial console is not working. Configuration is then limited to network access.
+Mit "set status_led GPIOno" kann der GPIO-Pin geändert werden (jeder Wert> 16, z. B. "set status_led 255", deaktiviert die Status-LED vollständig). Bei der Konfiguration mit GPIO1 funktioniert dies mit der eingebauten blauen LED auf den ESP-01-Karten. Da GPIO1 jedoch auch der UART-TX-Pin ist, bedeutet dies, dass die serielle Konsole nicht funktioniert. Die Konfiguration ist dann auf den Netzwerkzugriff beschränkt.
 
-# HW Factory Reset
-If you pull low GPIO 4 for more than 3 seconds, the repeater will do a factory reset and restart with default config. With "set hw_reset GPIOno" the GPIO pin can be changed (any value > 16, e.g. "set hw_reset 255" will disable the hw factory reset feature).
+# HW Werksreset
+Wenn Sie GPIO 4 länger als 3 Sekunden auf niedrig stellen, wird der Repeater auf die Werkseinstellungen zurückgesetzt und mit der Standardkonfiguration neu gestartet. Mit "set hw_reset GPIOno" kann der GPIO-Pin geändert werden (jeder Wert> 16, z. B. "set hw_reset 255", deaktiviert die Funktion zum Zurücksetzen auf die Werkseinstellungen).
 
-For many moduls, incl. ESP-01s and NodeMCUs, it is probably a good idea to use GPIO 0 for that, as it is used anyway. However, it is not the default pin, as it might interfere with pulling it down during flashing. Thus, if you want to use an existing push button on GPIO 0 for HW factory reset, configure it with "set hw_reset 0" and "save" after flashing. A factory reset triggered by the HW pin will NOT reset the configured hw_reset GPIO number ("reset factory" from console will do).
+Für viele Module, inkl. ESP-01s und NodeMCUs, wahrscheinlich ist es eine gute Idee, GPIO 0 dafür zu verwenden, da es sowieso verwendet wird. Dies ist jedoch nicht der Standard-Pin, da er das Herunterziehen während des Blinkens beeinträchtigen kann. Wenn Sie also einen vorhandenen Druckknopf auf GPIO 0 für den HW-Werksreset verwenden möchten, konfigurieren Sie ihn mit "set hw_reset 0" und "save" nach dem Flashen. Ein durch den HW-Pin ausgelöster Werksreset setzt die konfigurierte hw_reset-GPIO-Nummer NICHT zurück ("Werksreset" über die Konsole reicht aus).
 
-# Port Mapping
-In order to allow clients from the external network to connect to server port on the internal network, ports have to be mapped. An external port is mapped to an internal port of a specific internal IP address. Use the "portmap add" command for that. Port mappings can be listed with the "show" command and are saved with the current config. 
+# Port-Mapping
+Damit Clients aus dem externen Netzwerk eine Verbindung zum Serverport im internen Netzwerk herstellen können, müssen Ports zugeordnet werden. Ein externer Port wird einem internen Port einer bestimmten internen IP-Adresse zugeordnet. Verwenden Sie dazu den Befehl "portmap add". Portzuordnungen können mit dem Befehl "show" aufgelistet und mit der aktuellen Konfiguration gespeichert werden.
 
-However, to make sure that the expected device is listening at a certain IP address, it has to be ensured the this devices has the same IP address once it or the ESP is rebooted. To achieve this, either fixed IP addresses can be configured in the devices or the ESP has to remember its DHCP leases. This can be achieved with the "save dhcp" command. It saves the current state and all DHCP leases, so that they will be restored after reboot. DHCP leases can be listed with the "show stats" command.
+Um jedoch sicherzustellen, dass das erwartete Gerät eine bestimmte IP-Adresse abhört, muss sichergestellt werden, dass dieses Gerät nach dem Neustart oder dem Neustart des ESP die gleiche IP-Adresse hat. Dazu können entweder feste IP-Adressen in den Geräten konfiguriert werden oder der ESP muss sich an seine DHCP-Leases erinnern. Dies kann mit dem Befehl "save dhcp" erreicht werden. Der aktuelle Status und alle DHCP-Leases werden gespeichert, sodass sie nach dem Neustart wiederhergestellt werden. DHCP-Leases können mit dem Befehl "show stats" aufgelistet werden.
 
-# Automesh Mode
-Sometimes you might want to use several esp_wifi_repeaters in a row or a mesh to cover a larger distance or area. Generally, this can be done without any problems with NAT routers, actually you will have several layers of NAT. However, this means connectivity is limited: all nodes can talk to the internet, but generally there's no direct IP connectivity between the nodes. And, of course, the available bandwidth goes down the more hops you need. But users have reported that even 5 esp_wifi_repeaters in a row work quite well.
+# Automesh-Modus
+Manchmal möchten Sie möglicherweise mehrere esp_wifi_repeater in einer Reihe oder einem Netz verwenden, um eine größere Entfernung oder Fläche abzudecken. In der Regel kann dies mit NAT-Routern problemlos durchgeführt werden. Tatsächlich verfügen Sie über mehrere NAT-Ebenen. Dies bedeutet jedoch, dass die Konnektivität begrenzt ist: Alle Knoten können mit dem Internet kommunizieren, aber im Allgemeinen gibt es keine direkte IP-Konnektivität zwischen den Knoten. Und natürlich sinkt die verfügbare Bandbreite, je mehr Sprünge Sie benötigen. Aber Benutzer haben berichtet, dass sogar 5 esp_wifi_repeaters in einer Reihe ziemlich gut funktionieren.
 
-In such a setup configuration is quite a time consuming and error-prone activity. To simplify that, the esp_wifi_repeater now has a new mode: "Automesh". Just configure the SSID and the password and switch "automesh" on. (either on the CLI with "set automesh 1" or on the Web interface with just select the checkbox). This will do the following:
+In einem solchen Setup ist die Konfiguration ziemlich zeitaufwendig und fehleranfällig. Um dies zu vereinfachen, hat der esp_wifi_repeater jetzt einen neuen Modus: "Automesh". Konfigurieren Sie einfach die SSID und das Passwort und schalten Sie "automesh" ein. (entweder auf der CLI mit "set automesh 1" oder auf der Weboberfläche mit nur einem Häkchen). Dadurch wird Folgendes ausgeführt:
 
-Each esp_wifi_repeater configured in that way will automatically offer a WiFi network on the AP with the same SSID/password as it is connected to. Clients can use the same WiFi settings for the original network or the repeated ones. Each esp_wifi_repeater configured with "automesh" will first search for the best other AP to connect to. This is the one which is closest to the original WiFi network and has the best signal strength (RSSI).
+Jeder so konfigurierte esp_wifi_repeater bietet automatisch ein WiFi-Netzwerk auf dem AP mit derselben SSID / demselben Passwort an, mit dem er verbunden ist. Clients können dieselben oder wiederholte WLAN-Einstellungen für das ursprüngliche Netzwerk verwenden. Jeder mit "automesh" konfigurierte esp_wifi_repeater sucht zuerst nach dem besten anderen AP, zu dem eine Verbindung hergestellt werden kann. Dies ist diejenige, die dem ursprünglichen WiFi-Netzwerk am nächsten kommt und die beste Signalstärke (RSSI) aufweist.
 
-The signal strength is easy to measure with a scan, but which is the one closest to the original WiFi network when you see several APs with the same SSID? Therefore the protocol use a somewhat dirty trick: the esp_wifi_repeaters in "automesh" mode manipulate their BSSID (actually, according to the IEEE 802.11 standard this is the "ESSID" as it is an AP, but the SDK calls it "BSSID"), i.e. the MAC address of their AP interface, which is send out with every beacon frame 10 about time times per second. It uses the format: 24:24:mm:rr:rr:rr. "24:24" is just the unique identifier of a repeater (there is a minimal probability that this collides with the real APs MAC, but we can neglect this, as we can change that prefix if really required). "mm" means the "mesh level", this is the distance in hops to the original WiFi network. The last three "rr:rr:rr" are just random numbers to distinguish the various ESPs. The original AP keeps its BSSID, i.e. the one without the prefix "24:24" is recognized as root, called mesh level 0.
+Die Signalstärke lässt sich leicht mit einem Scan messen. Welches ist jedoch das dem ursprünglichen WiFi-Netzwerk am nächsten liegende, wenn Sie mehrere APs mit derselben SSID sehen? Daher verwendet das Protokoll einen etwas schmutzigen Trick: Die esp_wifi_repeaters im "automesh" -Modus manipulieren ihre BSSID (tatsächlich ist dies nach dem IEEE 802.11-Standard die "ESSID", da es sich um einen AP handelt, aber das SDK nennt es "BSSID"). dh die MAC-Adresse ihrer AP-Schnittstelle, die mit jedem Beacon-Frame 10 etwa Mal pro Sekunde ausgesendet wird. Es verwendet das Format: 24: 24: mm: rr: rr: rr. "24:24" ist nur die eindeutige Kennung eines Repeaters (es besteht eine minimale Wahrscheinlichkeit, dass dieser mit dem MAC des realen AP kollidiert, dies können wir jedoch vernachlässigen, da wir dieses Präfix bei Bedarf ändern können). "mm" bedeutet die "Maschenweite", dies ist die Entfernung in Hops zum ursprünglichen WiFi-Netzwerk. Die letzten drei "rr: rr: rr" sind nur Zufallszahlen zur Unterscheidung der verschiedenen ESPs. Der ursprüngliche AP behält seine BSSID bei, d. H. Diejenige ohne das Präfix "24:24" wird als Root erkannt und als Mesh Level 0 bezeichnet.
 
-<img src="https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/AutoMesh.JPG">
+<img src = "https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/AutoMesh.JPG">
 
-Now each esp_wifi_repeater can learn which other esp_wifi_repeater is the closest to the the original WiFi network, can connect to that, and chose its own BSSID accordingly. Also the IP address of the internal network is adjusted to the mesh level: 10.24.m.0. This creates a tree (a very special mesh) with the original WiFi AP as root and repeating nodes on several mesh levels (actually, it works somewhat similar as the Spanning Tree Protocol (STP) on the link layer or routing on the network layer using a Distance Vector protocol). As soon as an uplink link loss is detected, configuration is restarted. This should avoid loops, as during (re-)configuration also no beacons with an BSSID are sent.
+Jetzt kann jeder esp_wifi_repeater erfahren, welcher andere esp_wifi_repeater dem ursprünglichen WiFi-Netzwerk am nächsten ist, sich mit diesem verbinden und seine eigene BSSID entsprechend auswählen. Auch die IP-Adresse des internen Netzwerks wird an die Mesh-Ebene angepasst: 10.24.m.0. Auf diese Weise wird ein Baum (ein ganz besonderes Netz) mit dem ursprünglichen WiFi-AP als Stamm- und Wiederholungsknoten auf mehreren Netzebenen erstellt (tatsächlich funktioniert dies ähnlich wie das Spanning Tree Protocol (STP) auf der Verbindungsschicht oder das Routing auf der Netzwerkschicht mithilfe von ein Distanzvektor-Protokoll). Sobald ein Uplink-Verbindungsverlust erkannt wird, wird die Konfiguration neu gestartet. Dies sollte Schleifen vermeiden, da bei der (Neu-) Konfiguration auch keine Beacons mit einer BSSID gesendet werden.
 
-For convenience, the esp_wifi_repeater after "automesh" configuration first tries to check, whether it can connect to an uplink AP. If this fails, even when an AP with the correct SSID has been found, it assumes, the user did a mistake with the password and resets to factory defaults. After it had connected successfully once, it will assume config is correct and keep on trying after connection loss or reset as long as it takes (to avoid a DOS attack with a misconfigured AP). 
+Der Einfachheit halber versucht der esp_wifi_repeater nach der "automesh" -Konfiguration zunächst zu überprüfen, ob er eine Verbindung zu einem Uplink-AP herstellen kann. Wenn dies fehlschlägt, wird davon ausgegangen, dass der Benutzer einen Fehler mit dem Kennwort begangen und auf die werkseitigen Standardeinstellungen zurückgesetzt hat, auch wenn ein AP mit der richtigen SSID gefunden wurde. Nachdem die Verbindung einmal erfolgreich hergestellt wurde, wird davon ausgegangen, dass die Konfiguration korrekt ist, und es wird nach einem Verbindungsverlust oder einem Zurücksetzen so lange versucht, wie dies erforderlich ist (um einen DOS-Angriff mit einem falsch konfigurierten AP zu vermeiden).
 
-## Tuning Automesh
-If there are more than one ESP in range, there might be a trade-off between a shorter "bad" path and a longer "good" path (good and bad in terms of link quality). The parameter _am_threshold_ determines what a bad connection is: if the RSSI in a scan is less than this threshold, a connection is bad and path with one more hop is prefered. I.e. given _am_threshold_ is 85 and there are two automesh nodes detected in the scan: A with level 1 and RSSI -88 dB and B with level 2 and RSSI -60 dB, then a link to A is considered as too bad (-88 dB < -_am_threshold_) and B is preferred. The new node will become a level 3 node with uplink via B. _am_threshold_ is given as a positive value but means a negative dB. A smaller value is better. 
+## Automesh einstellen
+Wenn mehr als ein ESP in Reichweite ist, kann es zu einem Kompromiss zwischen einem kürzeren "schlechten" Pfad und einem längeren "guten" Pfad kommen (gut und schlecht in Bezug auf die Verbindungsqualität). Der Parameter _am_threshold_ bestimmt, was eine fehlerhafte Verbindung ist: Wenn der RSSI-Wert in einem Scan unter diesem Schwellenwert liegt, ist eine Verbindung fehlerhaft und der Pfad mit einem weiteren Hop wird bevorzugt. Das heißt gegeben _am_threshold_ ist 85 und es werden zwei Automesh-Knoten im Scan erkannt: A mit Level 1 und RSSI -88 dB und B mit Level 2 und RSSI -60 dB, dann wird eine Verbindung zu A als zu schlecht angesehen (-88 dB < -am_threshold_) und B ist bevorzugt. Der neue Knoten wird zu einem Knoten der Ebene 3 mit Aufwärtsverbindung über B. _am_threshold_ wird als positiver Wert angegeben, bedeutet jedoch ein negatives dB. Ein kleinerer Wert ist besser.
 
-If you want to get more insight into the topology of an automesh network, you might consider to connect all nodes to an MQTT broker and let them publish the "Topology" topic (see below). If you now subscribe on "/WiFi/+/system/Topology" you will get all the node and link infos including the RSSI (of connected ESPs) you need to reconstruct the complete graph and detect weak links in the mesh. The TopologyInfo topic contains the following JSON structure, that can be used to reconstruct a complete graph of an automesh network:
+Wenn Sie einen besseren Einblick in die Topologie eines Automesh-Netzwerks erhalten möchten, sollten Sie in Betracht ziehen, alle Knoten mit einem MQTT-Broker zu verbinden und sie das Thema "Topologie" veröffentlichen zu lassen (siehe unten). Wenn Sie jetzt "/ WiFi / + / system / Topology" abonnieren, erhalten Sie alle Knoten- und Link-Informationen, einschließlich der RSSI (der verbundenen ESPs), die Sie benötigen, um den gesamten Graphen zu rekonstruieren und schwache Links im Mesh zu erkennen. Das Thema TopologyInfo enthält die folgende JSON-Struktur, mit der ein vollständiges Diagramm eines Automesh-Netzwerks wiederhergestellt werden kann:
 ```
 {
 "nodeinfo" {
@@ -201,35 +203,35 @@ If you want to get more insight into the topology of an automesh network, you mi
 }
 ```
 
-Using the two parameters _am_scan_time_ and _am_sleep_time_ power management can be implemented in automesh mode, if you have connected GPIO16 to RST. After booting the esp_wifi_repeater scans for avilable uplink APs for _am_scan_time_ seconds. If none is found, it goes to deepsleep for _am_sleep_time_ seconds and tries again after reboot (default is 0 = disabled for both parameters).
+Die Verwendung der beiden Parameter _am_scan_time_ und _am_sleep_time_ power management kann im Automesh-Modus implementiert werden, wenn Sie GPIO16 mit RST verbunden haben. Nach dem Booten sucht der esp_wifi_repeater _am_scan_time_ Sekunden lang nach verfügbaren Uplink-APs. Wird keine gefunden, wird für _am_sleep_time_ Sekunden in den Tiefschlaf gewechselt und nach dem Neustart erneut versucht (Standard ist 0 = für beide Parameter deaktiviert).
 
-# Monitoring
-From the console a monitor service can be started ("monitor on [portno]"). This service mirrors the traffic of the internal network in pcap format to a TCP stream. E.g. with a "netcat [external_ip_of_the_repeater] [portno] | sudo wireshark -k -S -i -" from an computer in the external network you can now observe the traffic in the internal network in real time. Use this e.g. to observe with which internet sites your internals clients are communicating. Be aware that this at least doubles the load on the esp and the WiFi network. Under heavy load this might result in some packets beeing cut short or even dropped in the monitor session. CAUTION: leaving this port open is a potential security issue. Anybody from the local networks can connect and observe your traffic.
+# Überwachung
+Über die Konsole kann ein Monitorservice gestartet werden ("monitor on [portno]"). Dieser Dienst spiegelt den Datenverkehr des internen Netzwerks im pcap-Format in einen TCP-Stream. Z.B. Mit einem "netcat [external_ip_of_the_repeater] [portno] | sudo wireshark -k -S -i -" von einem Computer im externen Netzwerk können Sie jetzt den Verkehr im internen Netzwerk in Echtzeit beobachten. Verwenden Sie dies z.B. um zu beobachten, mit welchen Internetseiten Ihre internen Kunden kommunizieren. Beachten Sie, dass dies die Belastung des esp und des WiFi-Netzwerks mindestens verdoppelt. Unter hoher Last kann dies dazu führen, dass einige Pakete in der Monitorsitzung gekürzt oder gar verworfen werden. VORSICHT: Wenn Sie diesen Port offen lassen, besteht möglicherweise ein Sicherheitsproblem. Jeder aus den lokalen Netzwerken kann eine Verbindung herstellen und Ihren Datenverkehr beobachten.
 
 # Firewall
-The ESP router has a integrated basic firewall. ACLs (Access Control Lists) can be applied to the SoftAP interface. This is a cornerstone in IoT security, when the router is used to bring other IoT devices into the internet. It can be used to prevent e.g. third-party IoT devices from "calling home", being misused as malware bots, and to protect your home network with PCs, tablets and phones from being visible to home automation devices. 
+Der ESP-Router verfügt über eine integrierte Basis-Firewall. ACLs (Access Control Lists) können auf die SoftAP-Oberfläche angewendet werden. Dies ist ein Eckpfeiler der IoT-Sicherheit, wenn der Router verwendet wird, um andere IoT-Geräte ins Internet zu bringen. Es kann verwendet werden, um z.B. IoT-Geräte von Drittanbietern können nicht "zu Hause anrufen", als Malware-Bots missbraucht werden und Ihr Heimnetzwerk mit PCs, Tablets und Telefonen vor der Sichtbarkeit für Heimautomationsgeräte schützen.
 
-The four ACL lists are named "from_sta", "to_sta", "from_ap" and "to_ap" for incoming and outgoing packets on both interfaces ("sta" means the interfaces to the connectes clients, "ap" the interface to the uplink AP). ACLs are defined in "CISCO IOS style". The following example will allow for outgoing local broadcasts (for DHCP), UDP 53 (DNS), and TCP 1883 (MQTT) to a local broker, any other packets will be blocked:
+Die vier ACL-Listen heißen "from_sta", "to_sta", "from_ap" und "to_ap" für eingehende und ausgehende Pakete an beiden Schnittstellen ("sta" bezeichnet die Schnittstellen zu den verbundenen Clients, "ap" die Schnittstelle zum Uplink-AP ). ACLs werden im "CISCO IOS-Stil" definiert. Das folgende Beispiel ermöglicht ausgehende lokale Broadcasts (für DHCP), UDP 53 (DNS) und TCP 1883 (MQTT) an einen lokalen Broker. Alle anderen Pakete werden blockiert:
 - acl from_sta clear
-- acl from_sta IP any 255.255.255.255 allow
-- acl from_sta UDP any any any 53 allow
+- acl from_sta IP jede 255.255.255.255 zulassen
+- acl from_sta UDP any any any 53 erlauben
 - acl from_sta TCP any any 192.168.0.0/16 1883 allow
 - acl from_sta IP any any deny
 
-ACLs for the "to_sta" direction may be defined as well, but this is usually not required, as the reverse direction is quite well protected against unsolicited traffic by the NAT transation.
+Es können auch ACLs für die Richtung "to_sta" definiert werden, dies ist jedoch normalerweise nicht erforderlich, da die umgekehrte Richtung durch die NAT-Übertragung sehr gut vor unerwünschtem Datenverkehr geschützt ist.
 
-ACLs consist of filtering rules that are processed for each packet. Each rule consists of a protocol (IP, TCP, or UDP), source address/port, destination address/port, as well as an action "allow" or "deny". In case of plain IP no ports, only addresses are given. IP rules include TCP and UDP packets. Addresses can be given as subnet addresses in the "/" notation, e.g. 192.168.178.0/24. Also "any" can be used as wildcard, it matches on any address or portnumber. A rule is defined by the "acl" command:
+ACLs bestehen aus Filterregeln, die für jedes Paket verarbeitet werden. Jede Regel besteht aus einem Protokoll (IP, TCP oder UDP), einer Quelladresse / einem Quellport, einer Zieladresse / einem Zielport sowie einer Aktion "Zulassen" oder "Verweigern". Bei normaler IP ohne Ports werden nur Adressen angegeben. IP-Regeln umfassen TCP- und UDP-Pakete. Adressen können als Subnetzadressen in der "/" -Notation angegeben werden, z. 192.168.178.0/24. Auch "any" kann als Platzhalter verwendet werden, er stimmt mit jeder Adresse oder Portnummer überein. Eine Regel wird durch den Befehl "acl" definiert:
 
-- acl [from_sta|to_sta|from_ap|to_ap] [TCP|UDP|IP] _src-ip_ [_src_port_] _desr-ip_ [_dest_port_] [allow|deny|allow_monitor|deny_monitor]
+- acl [von_sta | nach_sta | von_ap | nach_ap] [TCP | UDP | IP] _src-ip_ [_src_port_] _desr-ip_ [_dest_port_] [allow | deny | allow_monitor | deny_monitor]
 
-The rules are processed top-down in the order of their appearance in the list. The first rule that matches a packet is applied and determies whether a packet is allowed (and forwarded) or denied (and dropped). This means, special cases first, general rules at the end. If there are rules in an ACL all packets that don't match any rule are denied by default. Thus, the last rule "from_sta IP any any deny" in the example above is not really needed, as it is the default anyway. If an ACL is empty, all packets are allowed.
+Die Regeln werden von oben nach unten in der Reihenfolge ihres Auftretens in der Liste verarbeitet. Die erste Regel, die mit einem Paket übereinstimmt, wird angewendet und bestimmt, ob ein Paket zugelassen (und weitergeleitet) oder abgelehnt (und verworfen) wird. Das heißt, Sonderfälle zuerst, allgemeine Regeln am Ende. Wenn eine ACL Regeln enthält, werden alle Pakete, die keiner Regel entsprechen, standardmäßig abgelehnt. Daher wird die letzte Regel "from_sta IP any any deny" im obigen Beispiel nicht wirklich benötigt, da dies sowieso die Standardregel ist. Wenn eine ACL leer ist, sind alle Pakete zulässig.
 
-Definition of ACL rules works also top-down: a new rule is always added at the end of a list. To change an ACL you first have to clear it completely (acl from_sta clear) and then rebuild it. ACLs are saved with the config. "show acl" will print out the ACLs plus statistics on the number of hits for each rule and the overall number of allowed and denied packets.
+Die Definition von ACL-Regeln funktioniert auch von oben nach unten: Eine neue Regel wird immer am Ende einer Liste hinzugefügt. Um eine ACL zu ändern, müssen Sie sie zuerst vollständig löschen (acl from_sta clear) und dann neu erstellen. ACLs werden mit der Konfiguration gespeichert. "show acl" druckt die ACLs plus Statistiken über die Anzahl der Treffer für jede Regel und die Gesamtanzahl der zulässigen und abgelehnten Pakete aus.
 
-With the command "set acl_debug 1" a summary of all denied packets is printed to the console. Also, an MQTT topic can publishe this summary. This can be used for firewall configuration to determine which rules are required to get the connected devices working. It also gives a hint if, if unexpected traffic happens (and is denied). 
+Mit dem Befehl "set acl_debug 1" wird eine Zusammenfassung aller abgelehnten Pakete an die Konsole ausgegeben. Ein MQTT-Thema kann diese Zusammenfassung auch veröffentlichen. Dies kann für die Firewall-Konfiguration verwendet werden, um zu bestimmen, welche Regeln erforderlich sind, damit die angeschlossenen Geräte funktionieren. Es gibt auch einen Hinweis, wenn unerwarteter Datenverkehr auftritt (und verweigert wird).
 
-For deeper analysis the monitoring service can be used (even denied packets are reported to the monitor before they are dropped). When the monitor is started with the "monitor acl _port_" command, ACLs can be used as online filters. All rules that are defined as 
-"allow_monitor" instead of "allow" and "deny_monitor" instead of "deny" are processed as usual, resulting in allowing of forwarding a packet, but they also send the packet to the monitor. Thus a list of rules that basically "allow" or "allow_monitor" all packets still makes sense, as it can be used to select already during catpure time which packet should be recorded. E.g. a lists:
+Für eine eingehendere Analyse kann der Überwachungsdienst verwendet werden (selbst abgelehnte Pakete werden dem Monitor gemeldet, bevor sie verworfen werden). Wenn der Monitor mit dem Befehl "monitor acl _port_" gestartet wird, können ACLs als Online-Filter verwendet werden. Alle Regeln, die als definiert sind
+"allow_monitor" anstelle von "allow" und "deny_monitor" anstelle von "deny" werden wie gewohnt verarbeitet, was dazu führt, dass ein Paket weitergeleitet werden kann, aber sie senden das Paket auch an den Monitor. Somit ist eine Liste von Regeln, die grundsätzlich alle Pakete "erlauben" oder "erlauben_überwachen", immer noch sinnvoll, da damit bereits während der catpure-Zeit ausgewählt werden kann, welches Paket aufgezeichnet werden soll. Z.B. eine Liste:
 
 - acl from_sta clear
 - acl from_sta IP 192.168.0.0/16 any allow_monitor
@@ -239,130 +241,128 @@ For deeper analysis the monitoring service can be used (even denied packets are 
 - acl to_sta IP any 192.168.0.0/16 allow_monitor
 - acl to_sta IP any any allow
 
-will allow all packets and also select all packets for monitoring that go from a station to the 192.168.0.0/16 (local)subnet and from the 192.168.0.0/16 to a station. Of course such a filter can be applied also after the capture to a full monitoring trace, but if you already know, what you are looking for, these online filters will help to reduce monitoring overhead drastically. It can also be used to debug all deny firewall rules by simply using "deny_monitor" instead of deny.
+erlaubt alle Pakete und wählt auch alle Pakete für die Überwachung aus, die von einer Station zum 192.168.0.0/16 (lokalen) Subnetz und vom 192.168.0.0/16 zu einer Station gehen. Natürlich kann ein solcher Filter auch nach der Erfassung auf eine vollständige Überwachungsspur angewendet werden. Wenn Sie jedoch bereits wissen, wonach Sie suchen, können Sie mit diesen Online-Filtern den Überwachungsaufwand drastisch reduzieren. Es kann auch zum Debuggen aller Ablehnungs-Firewall-Regeln verwendet werden, indem einfach "deny_monitor" anstelle von "deny" verwendet wird.
 
-# Static Routes
-By default the AP interface is NATed, so that any node connected to the AP will be able to access the outside world transparently via the ESP's STA interface. So no further action is required, if you are not a real network nerd.
+# Statische Routen
+Standardmäßig ist die AP-Schnittstelle NAT-fähig, sodass jeder mit dem AP verbundene Knoten über die STA-Schnittstelle des ESP transparent auf die Außenwelt zugreifen kann. Wenn Sie kein echter Netzwerk-Nerd sind, ist keine weitere Aktion erforderlich.
 
-For thoses of you that are really interested in further network config: the EPS's lwip IPv4 stack has been enhanced for this project with support for static routes: "show route" displays the routing table with all known routes, including the links to the connected network interfaces (the AP and the STA interface). Routing between these two interfaces works without furter configuration. Additional routes to other networks can be set via the "route add _netword_ _gateway_" command, known from Linux boxes or routers. A "save" command writes the current state of the routing table to flash configuration.
-	
-Here is a simple example of what can be done with static routes. Given the following network setup with two ESPs connected with the STA interfaces via a central home router:
-```
-| 10.0.1.1 AP-ESP1-STA 192.168.1.10 | <-> |Home Router| <-> | 192.168.1.20 STA-ESP2-AP 10.0.2.1|
-```
-Each ESP has a second network behind its AP with different network addresses: 10.0.1.0/24 and 10.0.2.0/24. ESP1 can ping to ESP2 to the 192.168.1.20 but not to the 10.0.2.1, as it doesn't know that it can reach it via the 192.168.1.20. This changes if you add two static routes. On ESP1:
-```
+Für diejenigen unter Ihnen, die sich wirklich für weitere Netzwerkkonfigurationen interessieren: Der IPv4-Stack von EPS wurde für dieses Projekt um die Unterstützung statischer Routen erweitert: "show route" zeigt die Routing-Tabelle mit allen bekannten Routen an, einschließlich der Links zum verbundenen Netzwerk Schnittstellen (der AP und die STA-Schnittstelle). Das Routing zwischen diesen beiden Schnittstellen funktioniert ohne weitere Konfiguration. Zusätzliche Routen zu anderen Netzwerken können über den Befehl "route add _netword_ _gateway_" festgelegt werden, der von Linux-Boxen oder -Routern bekannt ist. Ein "Speichern" -Befehl schreibt den aktuellen Status der Routing-Tabelle in die Flash-Konfiguration.
+
+Hier ist ein einfaches Beispiel dafür, was mit statischen Routen geschehen kann. Ausgehend vom folgenden Netzwerkaufbau mit zwei ESPs, die über einen zentralen Heimrouter mit den STA-Schnittstellen verbunden sind:
+`` `
+| 10.0.1.1 AP-ESP1-STA 192.168.1.10 | <-> | Heimrouter | <-> | 192.168.1.20 STA-ESP2-AP 10.0.2.1 |
+`` `
+Jeder ESP verfügt hinter seinem AP über ein zweites Netzwerk mit unterschiedlichen Netzwerkadressen: 10.0.1.0/24 und 10.0.2.0/24. ESP1 kann an ESP2 an die 192.168.1.20, aber nicht an die 10.0.2.1 pingen, da es nicht weiß, dass es über die 192.168.1.20 erreichbar ist. Dies ändert sich, wenn Sie zwei statische Routen hinzufügen. Auf ESP1:
+`` `
 route add 10.0.2.0/24 92.168.1.20
-```
-and on ESP2:
-```
+`` `
+und auf ESP2:
+`` `
 route add 10.0.1.0/24 92.168.1.10
-```
-Now a "ping 10.0.2.1" on ESP1 will be successful. It is send to 192.168.1.20 and then answered by ESP2.
+`` `
+Jetzt ist ein "Ping 10.0.2.1" auf ESP1 erfolgreich. Es wird an 192.168.1.20 gesendet und dann von ESP2 beantwortet.
 
-Now in each network an additional client connects (with addresses 10.0.1.2 and 10.0.2.2): 
-```
-| STA1 10.0.1.2 | <-> | 10.0.1.1 ESP1 192.168.1.10 | <-> |Home Router| <-> | 192.168.1.20 ESP2 10.0.2.1| <-> | STA2 10.0.2.2 |
-```
-Now even client STA2 with the local address 10.0.1.2 can ping to STA2 with 10.0.2.2 as it send its request first to its default router ESP1 and this knows, that all packets to a 10.0.2.0/24 address have to be forwarded to 192.168.1.20. There the ESP2 knows how to send it to STA2. Tthe same applies for the reply in the other direction.
+Jetzt verbindet sich in jedem Netzwerk ein zusätzlicher Client (mit den Adressen 10.0.1.2 und 10.0.2.2):
+`` `
+| STA1 10.0.1.2 | <-> | 10.0.1.1 ESP1 192.168.1.10 | <-> | Heimrouter | <-> | 192.168.1.20 ESP2 10.0.2.1 | <-> | STA2 10.0.2.2 |
+`` `
+Jetzt kann auch der Client STA2 mit der lokalen Adresse 10.0.1.2 mit 10.0.2.2 an STA2 pingen, da er seine Anfrage zuerst an seinen Standardrouter ESP1 sendet und dieser weiß, dass alle Pakete an eine 10.0.2.0/24-Adresse weitergeleitet werden müssen 192.168.1.20. Dort kann das ESP2 es an STA2 senden. Gleiches gilt für die Antwort in die andere Richtung.
 
-This allows you to configure a multi-star topology of ESPs, where each ESP and its STA clients can direcly reach each other (without any need for portmaps). Configuration of the required routes maybe somewhat painful - but a nice exercise in networking. Next step would be to port a dynamic routing protocol like RIP on the ESP...
+Auf diese Weise können Sie eine Multi-Star-Topologie von ESPs konfigurieren, bei der sich jeder ESP und seine STA-Clients direkt erreichen können (ohne dass Portmaps erforderlich sind). Die Konfiguration der erforderlichen Routen ist vielleicht etwas schmerzhaft - aber eine schöne Übung im Networking. Der nächste Schritt wäre, ein dynamisches Routing-Protokoll wie RIP auf den ESP zu portieren ...
 
-# Bitrate Limits
-By setting upstream_kbps and downstream_kbps to a value != 0 (0 is the default), you can limit the maximum bitrate of the ESP's AP. This value is a limit that applies to the traffic of all connected clients. Packets that would exeed the defined bitrate are dropped. The traffic shaper uses the "Token Bucket" algorithm with a bucket size of currently four times the bitrate per seconds, allowing for bursts, when there was no traffic before.
+# Bitratenlimits
+Indem Sie upstream_kbps und downstream_kbps auf einen Wert von! = 0 setzen (0 ist die Standardeinstellung), können Sie die maximale Bitrate des AP des ESP begrenzen. Dieser Wert ist ein Grenzwert, der für den Datenverkehr aller verbundenen Clients gilt. Pakete, die die definierte Bitrate überschreiten würden, werden verworfen. Der Traffic Shaper verwendet den "Token Bucket" -Algorithmus mit einer Bucket-Größe von derzeit dem Vierfachen der Bitrate pro Sekunde, wobei Bursts berücksichtigt werden, wenn zuvor kein Verkehr stattgefunden hat.
 
-# MQTT Support
-Since version 1.3 the router has a build-in MQTT client (thanks to Tuan PM for his library https://github.com/tuanpmt/esp_mqtt). This can help to integrate the router/repeater into the IoT. A home automation system can e.g. make decisions based on infos about the currently associated stations, it can switch on and of the repeaters (e.g. based on a time schedule), or it can simply be used to monitor the load. The router can be connected either to a local MQTT broker or to a publicly available broker in the cloud. However, currently it does not support TLS encryption.
+# MQTT-Unterstützung
+Seit Version 1.3 verfügt der Router über einen integrierten MQTT-Client (danke an Tuan PM für seine Bibliothek https://github.com/tuanpmt/esp_mqtt). Dies kann dazu beitragen, den Router / Repeater in das IoT zu integrieren. Ein Hausautomationssystem kann z.B. Treffen Sie Entscheidungen auf der Grundlage von Informationen über die aktuell zugeordneten Stationen, können Sie die Repeater einschalten (z. B. auf der Grundlage eines Zeitplans) oder einfach die Last überwachen. Der Router kann entweder mit einem lokalen MQTT-Broker oder einem öffentlich verfügbaren Broker in der Cloud verbunden sein. Derzeit wird jedoch keine TLS-Verschlüsselung unterstützt.
 
-By default the MQTT client is disabled. It can be enabled by setting the config parameter "mqtt_host" to a hostname different from "none". To configure MQTT you can set the following parameters:
-- set mqtt_host _IP_or_hostname_: IP or hostname of the MQTT broker ("none" disables the MQTT client)
-- set mqtt_port _port_: Port of the MQTT broker used for connection (default: 1883)
-- set mqtt_user _username_: Username for authentication ("none" if no authentication is required at the broker)
-- set mqtt_user _password_: Password for authentication
-- set mqtt_id _clientId_: Id of the client at the broker (default: "ESPRouter_xxxxxx" derived from the MAC address)
-- set mqtt_prefix _prefix_path_: Prefix for all published topics (default: "/WiFi/ESPRouter_xxxxxx/system", again derived from the MAC address)
-- set mqtt_command_topic _command_topic_: Topic subscribed to receive commands, same as from the console. (default: "/WiFi/ESPRouter_xxxxxx/command", "none" disables commands via MQTT)
-- set mqtt_interval _secs_: Set the interval in which the router publishs status topics (default: 15s, 0 disables status publication)
-- set mqtt_mask _mask_in_hex_: Selects which topics are published (default: "ffff" means all)
+Standardmäßig ist der MQTT-Client deaktiviert. Sie können dies aktivieren, indem Sie den Konfigurationsparameter "mqtt_host" auf einen anderen Hostnamen als "none" setzen. Zum Konfigurieren von MQTT können Sie die folgenden Parameter festlegen:
+- set mqtt_host _IP_or_hostname_: IP oder Hostname des MQTT-Brokers ("none" deaktiviert den MQTT-Client)
+- set mqtt_port _port_: Port des für die Verbindung verwendeten MQTT-Brokers (Standard: 1883)
+- set mqtt_user _username_: Benutzername für die Authentifizierung ("none", wenn beim Broker keine Authentifizierung erforderlich ist)
+- set mqtt_user _password_: Passwort zur Authentifizierung
+- set mqtt_id _clientId_: ID des Clients beim Broker (Standard: "ESPRouter_xxxxxx" abgeleitet von der MAC-Adresse)
+- setze mqtt_prefix _prefix_path_: Präfix für alle veröffentlichten Themen (Standard: "/ WiFi / ESPRouter_xxxxxx / system", wiederum abgeleitet von der MAC-Adresse)
+- set mqtt_command_topic _command_topic_: Thema, das zum Empfangen von Befehlen wie von der Konsole abonniert wurde. (Standard: "/ WiFi / ESPRouter_xxxxxx / command", "none" deaktiviert Befehle über MQTT)
+- set mqtt_interval _secs_: Legt das Intervall fest, in dem der Router Statusthemen veröffentlicht (Standard: 15s, 0 deaktiviert die Statusveröffentlichung).
+- set mqtt_mask _mask_in_hex_: Wählt aus, welche Themen veröffentlicht werden (Standard: "ffff" bedeutet alle)
 
-The MQTT parameters can be displayed with the "show mqtt" command.
+Die MQTT-Parameter können mit dem Befehl "show mqtt" angezeigt werden.
 
-The router can publish the following status topics periodically (every mqtt_interval):
-- _prefix_path_/Uptime: System uptime since last reset in s (mask: 0x0020)
-- _prefix_path_/Vdd: Voltage of the power supply in mV (mask: 0x0040)
-- _prefix_path_/Bpsin: KBytes/s from stations into the AP (mask: 0x0800)
-- _prefix_path_/Bpsout: KBytes/s from the AP to stations (mask: 0x0800)
-- _prefix_path_/Bpd: KBytes per day from and to stations (mask: 0x0400)
-- _prefix_path_/Ppsin: Packets/s from stations into the AP (mask: 0x0200)
-- _prefix_path_/Ppsout: Packets/s from the AP to stations  (mask: 0x0200)
-- _prefix_path_/Bin: Total bytes from stations into the AP (mask: 0x0100)
-- _prefix_path_/Bout: Total bytes from the AP to stations  (mask: 0x0100)
-- _prefix_path_/NoStations: Number of stations currently connected to the AP  (mask: 0x2000)
-- _prefix_path_/TopologyInfo: JSON struct with the current topology info of the node (mask: 0x1000)
+Der Router kann die folgenden Statusthemen regelmäßig veröffentlichen (jedes mqtt_interval):
+- _prefix_path_ / Uptime: Systemverfügbarkeit seit dem letzten Zurücksetzen in s (Maske: 0x0020)
+- _prefix_path_ / Vdd: Spannung der Stromversorgung in mV (Maske: 0x0040)
+- _prefix_path_ / Bpsin: KByte / s von Stationen in den AP (Maske: 0x0800)
+- _prefix_path_ / Bpsout: KBytes / s vom AP zu Stationen (Maske: 0x0800)
+- _prefix_path_ / Bpd: KBytes pro Tag von und zu Stationen (Maske: 0x0400)
+- _prefix_path_ / Ppsin: Pakete / s von Stationen in den AP (Maske: 0x0200)
+- _prefix_path_ / Ppsout: Pakete / s vom AP zu Stationen (Maske: 0x0200)
+- _prefix_path_ / Bin: Summe der Bytes von Stationen in den AP (Maske: 0x0100)
+- _prefix_path_ / Bout: Summe der Bytes vom AP zu den Stationen (Maske: 0x0100)
+- _prefix_path_ / NoStations: Anzahl der momentan mit dem AP verbundenen Stationen (Maske: 0x2000)
+- _prefix_path_ / TopologyInfo: JSON-Struktur mit den aktuellen Topologieinformationen des Knotens (Maske: 0x1000)
 
-In addition the repeater can publish on an event basis:
-- _prefix_path_/join: MAC address of a station joining the AP (mask: 0x0008)
-- _prefix_path_/leave: MAC address of a station leaving the AP (mask: 0x0010)
-- _prefix_path_/IP: IP address of the router when received via DHCP (mask: 0x0002)
-- _prefix_path_/ScanResult: Separate topic for the results of a "scan" command (one message per found AP) (mask: 0x0004)
-- _prefix_path_/ACLDeny: A packet has been denied by an ACL rule and has been dropped (mask: 0x0080)
+Zusätzlich kann der Repeater auf Ereignisbasis veröffentlichen:
+- _prefix_path_ / join: MAC-Adresse einer Station, die dem AP beitritt (Maske: 0x0008)
+- _prefix_path_ / leave: MAC-Adresse einer Station, die den AP verlässt (Maske: 0x0010)
+- _prefix_path_ / IP: IP-Adresse des Routers beim Empfang über DHCP (Maske: 0x0002)
+- _prefix_path_ / ScanResult: Separates Thema für die Ergebnisse eines "Scan" -Befehls (eine Nachricht pro gefundenem AP) (Maske: 0x0004)
+- _prefix_path_ / ACLDeny: Ein Paket wurde von einer ACL-Regel abgelehnt und verworfen (Maske: 0x0080)
 
-The router can be configured using the following topics:
-- _command_topic_: The router subscribes on this topic and interprets all messages as command lines
-- _prefix_path_/response: The router publishes on this topic the command line output (mask: 0x0001)
+Der Router kann unter Verwendung der folgenden Themen konfiguriert werden:
+- _command_topic_: Der Router abonniert dieses Thema und interpretiert alle Nachrichten als Befehlszeilen
+- _prefix_path_ / response: Der Router veröffentlicht zu diesem Thema die Befehlszeilenausgabe (Maske: 0x0001)
 
-If you now want the router to publish e.g. only Vdd, its IP, and the command line output, set the mqtt_mask to 0x0001 | 0x0002 | 0x0040 (= "set mqtt_mask 0043").
+Wenn Sie jetzt möchten, dass der Router z. Nur Vdd, seine IP und die Befehlszeilenausgabe setzen die mqtt_mask auf 0x0001 | 0x0002 | 0x0040 (= "set mqtt_mask 0043").
 
-# Power Management
-The repeater monitors its current supply voltage (shown in the "show stats" command). This only works, if the 107th byte in esp_init_data_default.bin, named as vdd33_const, is set to 255(0xFF). The easiest way to achive that, is to write esp_init_data_default_v08_vdd33.bin to flash (see below).
+# Energieverwaltung
+Der Repeater überwacht seine aktuelle Versorgungsspannung (siehe Befehl "show stats"). Dies funktioniert nur, wenn das 107. Byte in esp_init_data_default.bin mit dem Namen vdd33_const auf 255 (0xFF) gesetzt ist. Der einfachste Weg, dies zu erreichen, besteht darin, esp_init_data_default_v08_vdd33.bin zum Flashen zu schreiben (siehe unten).
 
-If _vmin_ (in mV, default 0) is set to a value > 0 and the supply voltage drops below this value, it will go into deep sleep mode for _vmin_sleep_ seconds. If you have connected GPIO16 to RST (which is hard to solder on an ESP-01) it will reboot after this interval, try to reconnect, and will continue its measurements. If _vmin_ is saved with the config, it will sleep over and over again, until the supply voltage raises above the threshold. These settings are especially (only?) useful if you have powered the ESP with a (lithium) battery whithout undercharge protection. Then a value of 2900mV-3000mV is probably helpful, as it reduces power consumption of the ESP to a minimum and you have much more time to recharge or replace the battery before damage. This only makes sense, if you have the ESP connected directly to the battery. If you have additional logic, this will still drain the battery.
+Wenn _vmin_ (in mV, Standardwert 0) auf einen Wert> 0 eingestellt ist und die Versorgungsspannung unter diesen Wert abfällt, wird für _vmin_sleep_ Sekunden in den Tiefschlafmodus geschaltet. Wenn Sie GPIO16 an RST angeschlossen haben (das auf einem ESP-01 schwer zu löten ist), wird nach diesem Intervall ein Neustart durchgeführt, eine erneute Verbindung hergestellt und die Messungen fortgesetzt. Wenn _vmin_ mit der Konfiguration gespeichert wird, wird es immer wieder in den Ruhezustand versetzt, bis die Versorgungsspannung über die Schwelle ansteigt. Diese Einstellungen sind besonders (nur?) Nützlich, wenn Sie das ESP mit einer (Lithium-) Batterie ohne Schutz vor zu geringer Aufladung betrieben haben. Dann ist ein Wert zwischen 2900 mV und 3000 mV wahrscheinlich hilfreich, da dadurch der Stromverbrauch des ESP auf ein Minimum reduziert wird und Sie viel mehr Zeit haben, den Akku aufzuladen oder auszutauschen, bevor er beschädigt wird. Dies ist nur dann sinnvoll, wenn Sie das ESP direkt an die Batterie angeschlossen haben. Wenn Sie eine zusätzliche Logik haben, wird die Batterie dadurch immer noch entladen.
 
-You can send the ESP to sleep manually once by using the "sleep" command.
+Sie können den ESP mit dem Befehl "sleep" einmal manuell in den Ruhezustand versetzen.
 
-Caution: If you save a _vmin_ value higher than the max supply voltage to flash, the repeater will immediately shutdown every time after reboot. Then you have to wipe out the whole config by flashing blank.bin (or any other file) to 0x0c000.
+Achtung: Wenn Sie einen _vmin_-Wert speichern, wird der Repeater nach jedem Neustart sofort heruntergefahren. Dann müssen Sie die gesamte Konfiguration löschen, indem Sie blank.bin (oder eine andere Datei) auf 0x0c000 flashen.
+# ENC28J60 Ethernet-Unterstützung (experimentell)
+Wenn Sie die Option HAVE_ENC28J60 in user_config.h aktivieren und das Projekt neu kompilieren, erhalten Sie Unterstützung für eine ENC28J60-Ethernet-NIC, die über SPI verbunden ist.
 
-# ENC28J60 Ethernet Support (experimental)
-If you enable the HAVE_ENC28J60 option in user_config.h and recompile the project, you get support for an ENC28J60 Ethernet NIC connected via SPI.
+Die Verbindung über SPI-Verbindung muss sein:
+`` `
+NodeMCU / Wemos ESP8266 ENC28J60
 
-The connection via SPI connection has to be:
-```
-NodeMCU/Wemos  ESP8266      ENC28J60
+        D6 GPIO12 <---> MISO
+        D7 GPIO13 <---> MOSI
+        D5 GPIO14 <---> SCLK
+        D8 GPIO15 <---> CS
+        D1 GPIO5 <---> INT
+               Q3 / V33 <---> 3,3 V
+               GND <---> GND
+`` `
+Außerdem benötigen Sie einen Transistor zum Entkoppeln von GPIO15, sonst bootet Ihr ESP nicht mehr, siehe: https://esp8266hints.wordpress.com/category/ethernet/
 
-        D6     GPIO12 <---> MISO
-        D7     GPIO13 <---> MOSI
-        D5     GPIO14 <---> SCLK
-        D8     GPIO15 <---> CS
-        D1     GPIO5  <---> INT
-               Q3/V33 <---> 3.3V
-               GND    <---> GND
-```
-In addition you will need a transistor for decoupling GPIO15, otherwise your ESP will not boot any more, see: https://esp8266hints.wordpress.com/category/ethernet/
+Jetzt können Sie die neue Ethernet-Schnittstelle konfigurieren:
+- set eth_enable [0 | 1]: Aktiviert / Deaktiviert eine ENC28J60-Ethernet-NIC am SPI-Bus (Standard: 0 - deaktiviert)
+- set eth_ip _ip-addr_: Legt eine statische IP-Adresse für die ETH-Schnittstelle fest
+- set eth_ip dhcp: Konfiguriert standardmäßig die dynamische IP-Adresse für die ETH-Schnittstelle
+- set eth_netmask _netmask_: Setzt eine statische Netzmaske für die ETH-Schnittstelle
+- set eth_gw _gw-addr_: Legt eine statische Gateway-Adresse für die ETH-Schnittstelle fest
 
-Now you can configure the new Ethernet interface: 
-- set eth_enable [0|1]: enables/disables an ENC28J60 Ethernet NIC on the SPI bus (default: 0 - disabled)
-- set eth_ip _ip-addr_: sets a static IP address for the ETH interface
-- set eth_ip dhcp: configures dynamic IP address for the ETH interface, default
-- set eth_netmask _netmask_: sets a static netmask for the ETH interface
-- set eth_gw _gw-addr_: sets a static gateway address for the ETH interface
+# Bauen und Flashen
+Um diese Binärdatei zu erstellen, müssen Sie esp-open-sdk herunterladen und installieren (https://github.com/pfalcon/esp-open-sdk). Stellen Sie sicher, dass Sie das enthaltene "blinky" -Beispiel kompilieren und herunterladen können.
 
-# Building and Flashing
-To build this binary you download and install the esp-open-sdk (https://github.com/pfalcon/esp-open-sdk). Make sure, you can compile and download the included "blinky" example.
+Laden Sie dann diesen Quelltextbaum in ein separates Verzeichnis herunter und passen Sie die Variable BUILD_AREA im Makefile und die gewünschten Optionen in user / user_config.h an. Änderungen der Standardkonfiguration können in user / config_flash.c vorgenommen werden. Erstellen Sie die esp_wifi_repeater-Firmware mit "make". "make flash" blinkt es auf einen esp8266.
 
-Then download this source tree in a separate directory and adjust the BUILD_AREA variable in the Makefile and any desired options in user/user_config.h. Changes of the default configuration can be made in user/config_flash.c. Build the esp_wifi_repeater firmware with "make". "make flash" flashes it onto an esp8266.
+Der Quelltextbaum enthält eine Binärversion von liblwip_open sowie die erforderlichen zusätzlichen Includes aus meiner Abspaltung von esp-open-lwip. * Dafür ist keine zusätzliche Installationsaktion erforderlich. * Nur wenn Sie die vorkompilierte Bibliothek nicht verwenden möchten, lesen Sie die Quellen unter https://github.com/martin-ger/esp-open-lwip. Verwenden Sie es, um das Verzeichnis "esp-open-lwip" im esp-open-sdk-Baum zu ersetzen. "make clean" im Verzeichnis esp_open_lwip und noch einmal ein "make" im oberen Verzeichnis esp_open_sdk. Dadurch wird eine liblwip_open.a kompiliert, die die NAT-Funktionen enthält. Ersetzen Sie liblwip_open_napt.a durch diese Binärdatei.
 
-The source tree includes a binary version of the liblwip_open plus the required additional includes from my fork of esp-open-lwip. *No additional install action is required for that.* Only if you don't want to use the precompiled library, checkout the sources from https://github.com/martin-ger/esp-open-lwip . Use it to replace the directory "esp-open-lwip" in the esp-open-sdk tree. "make clean" in the esp_open_lwip dir and once again a "make" in the upper esp_open_sdk directory. This will compile a liblwip_open.a that contains the NAT-features. Replace liblwip_open_napt.a with that binary.
+Wenn Sie die vollständigen vorkompilierten Firmware-Binärdateien verwenden möchten, können Sie sie mit "esptool.py --port / dev / ttyUSB0 write_flash -fs 4MB -ff 80m -fm dio 0x00000 firmware / 0x00000.bin 0x10000 firmware / 0x10000.bin" ( Verwenden Sie -fs 1 MB für einen ESP-01. Für das esp8285 müssen Sie -fs 1MB und -fm dout verwenden.
 
-If you want to use the complete precompiled firmware binaries you can flash them with "esptool.py --port /dev/ttyUSB0 write_flash -fs 4MB -ff 80m -fm dio 0x00000 firmware/0x00000.bin 0x10000 firmware/0x10000.bin" (use -fs 1MB for an ESP-01). For the esp8285 you must use -fs 1MB and -fm dout.
+Unter Windows können Sie es mit dem "ESP8266 Download Tool" aktualisieren, das unter https://espressif.com/en/support/download/other-tools verfügbar ist. Laden Sie die beiden Dateien 0x00000.bin und 0x10000.bin aus dem Firmware-Verzeichnis herunter. Verwenden Sie für einen generischen ESP12, eine NodeMCU oder einen Wemos D1 die folgenden Einstellungen (für einen ESP-01 ändern Sie die FLASH-GRÖSSE auf "8Mbit"):
 
-On Windows you can flash it using the "ESP8266 Download Tool" available at https://espressif.com/en/support/download/other-tools. Download the two files 0x00000.bin and 0x10000.bin from the firmware directory. For a generic ESP12, a NodeMCU or a Wemos D1 use the following settings (for an ESP-01 change FLASH SIZE to "8Mbit"):
+<img src = "https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/FlashRepeaterWindows.jpg">
 
-<img src="https://raw.githubusercontent.com/martin-ger/esp_wifi_repeater/master/FlashRepeaterWindows.jpg">
+Wenn der "QIO" -Modus auf Ihrem Gerät fehlschlägt, versuchen Sie stattdessen "DIO". Schauen Sie sich auch die "Erkannte Information" an, um die Größe und den Modus des Flash-Chips zu überprüfen. Wenn Ihre heruntergeladene Firmware immer noch nicht richtig startet, überprüfen Sie anhand der beigefügten Prüfsummen, ob die Binärdateien möglicherweise beschädigt sind.
 
-If "QIO" mode fails on your device, try "DIO" instead. Also have a look at the "Detected Info" to check size and mode of the flash chip. If your downloaded firmware still doesn't start properly, please check with the enclosed checksums whether the binary files are possibly corrupted.
-
-# Known Issues
-- Due to the limitations of the ESP's SoftAP implementation, there is a maximum of 8 simultaniously connected stations.
-- The ESP8266 requires a good power supply as it produces current spikes of up to 170 mA during transmit (typical average consumption is around 70 mA when WiFi is on). Check the power supply first, if your ESP runs unstable and reboots from time to time. A large capacitor between Vdd and Gnd can help if you experience problems here.
-- All firmware published after 17/Oct/2017 have been built with the patched version of the SDK 2.1.0 from Espressif that mitigates the KRACK (https://www.krackattacks.com/ ) attack.
-
+# Bekannte Probleme
+- Aufgrund der Einschränkungen der ESP-SoftAP-Implementierung sind maximal 8 Stationen gleichzeitig verbunden.
+- Der ESP8266 benötigt eine gute Stromversorgung, da er während des Sendens Stromspitzen von bis zu 170 mA erzeugt (typischer Durchschnittsverbrauch liegt bei ca. 70 mA, wenn WLAN aktiviert ist). Überprüfen Sie zuerst die Stromversorgung, wenn Ihr ESP instabil läuft und von Zeit zu Zeit neu startet. Ein großer Kondensator zwischen Vdd und Gnd kann helfen, wenn hier Probleme auftreten.
+- Alle nach dem 17. Oktober 2017 veröffentlichten Firmware-Versionen wurden mit der gepatchten Version des SDK 2.1.0 von Espressif erstellt, die den KRACK-Angriff (https://www.krackattacks.com/) abschwächt.
