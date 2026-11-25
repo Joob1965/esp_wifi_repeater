@@ -833,7 +833,7 @@ void ICACHE_FLASH_ATTR console_handle_command(struct espconn *pespconn)
 	);
         to_console(response);
 
-        os_sprintf_flash(response, "set [ssid|password|auto_connect|ap_ssid|ap_password|ap_on|ap_open|nat] <val>\r\n");
+        os_sprintf_flash(response, "set [ssid|password|auto_connect|ap_ssid|ap_password|ap_on|ap_open|nat|bridge_mode] <val>\r\n");
         to_console(response);
 #ifdef WPA2_PEAP
         os_sprintf_flash(response, "set [use_peap|peap_identity|peap_username|peap_password] <val>\r\n");
@@ -948,14 +948,15 @@ void ICACHE_FLASH_ATTR console_handle_command(struct espconn *pespconn)
             to_console(response);
 	}
 #endif
-        os_sprintf(response, "AP:  SSID:%s %s PW:%s%s%s IP:%d.%d.%d.%d/24%s\r\n",
+        os_sprintf(response, "AP:  SSID:%s %s PW:%s%s%s IP:%d.%d.%d.%d/24%s%s\r\n",
                    config.ap_ssid,
 		   config.ssid_hidden?"[hidden]":"",
                    config.locked?"***":(char*)config.ap_password,
                    config.ap_open?" [open]":"",
                    config.ap_on?"":" [disabled]",
 		   IP2STR(&config.network_addr),
-		   config.nat_enable?" [NAT]":"");
+		   config.bridge_mode?" [BRIDGE]":(config.nat_enable?" [NAT]":""),
+		   "");
         to_console(response);
 
 #ifdef HAVE_ENC28J60
@@ -1772,12 +1773,28 @@ void ICACHE_FLASH_ATTR console_handle_command(struct espconn *pespconn)
             if (strcmp(tokens[1],"nat") == 0)
             {
                 config.nat_enable = atoi(tokens[2]);
-		if (config.nat_enable) {
+                // Disable bridge_mode when enabling NAT manually
+                if (config.nat_enable) {
+                    config.bridge_mode = 0;
 		    ip_napt_enable_no(1, 1);
-		    os_sprintf_flash(response, "NAT enabled\r\n");
+		    os_sprintf_flash(response, "NAT enabled, bridge_mode disabled\r\n");
 		} else {
 		    ip_napt_enable_no(1, 0);
 		    os_sprintf_flash(response, "NAT disabled\r\n");
+		}
+                goto command_handled;
+            }
+
+            if (strcmp(tokens[1],"bridge_mode") == 0)
+            {
+                config.bridge_mode = atoi(tokens[2]);
+                // Disable NAT when enabling bridge mode
+                if (config.bridge_mode) {
+                    config.nat_enable = 0;
+                    ip_napt_enable_no(1, 0);
+		    os_sprintf_flash(response, "Bridge mode enabled, NAT disabled\r\n");
+		} else {
+		    os_sprintf_flash(response, "Bridge mode disabled\r\n");
 		}
                 goto command_handled;
             }
@@ -3048,10 +3065,37 @@ int i;
 
    wifi_softap_dhcps_stop();
 
-   info.ip = config.network_addr;
-   ip4_addr4(&info.ip) = 1;
-   info.gw = info.ip;
-   IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+   if (config.bridge_mode) {
+       // Bridge mode: use the same IP subnet as the STA interface
+       // Get the STA netif info
+       struct netif *sta_nif = NULL;
+       for (sta_nif = netif_list; sta_nif != NULL && sta_nif->num != 0; sta_nif = sta_nif->next);
+       
+       if (sta_nif != NULL) {
+           // Copy STA IP config to AP netif
+           info.ip = sta_nif->ip_addr;
+           info.gw = sta_nif->gw;
+           info.netmask = sta_nif->netmask;
+           
+           // Set a slightly different IP if on the same netif (not essential for bridging)
+           if ((info.ip.addr & info.netmask.addr) == (info.ip.addr & info.netmask.addr)) {
+               // Change last octet to .2 for the AP netif
+               info.ip.addr = (info.ip.addr & 0xFFFFFF00) | 0x02000000;
+           }
+       } else {
+           // STA not ready yet, use configured network
+           info.ip = config.network_addr;
+           ip4_addr4(&info.ip) = 1;
+           info.gw = info.ip;
+           IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+       }
+   } else {
+       // Normal repeater mode
+       info.ip = config.network_addr;
+       ip4_addr4(&info.ip) = 1;
+       info.gw = info.ip;
+       IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+   }
 
    wifi_set_ip_info(nif->num, &info);
 
@@ -3061,10 +3105,15 @@ int i;
    ip4_addr4(&dhcp_lease.end_ip) = 128;
    wifi_softap_set_dhcps_lease(&dhcp_lease);
 
-   wifi_softap_dhcps_start();
-
-   // Change the DNS server again
-   dhcps_set_DNS(&dns_ip);
+   if (!config.bridge_mode) {
+       // Only enable DHCP server in repeater mode
+       wifi_softap_dhcps_start();
+       dhcps_set_DNS(&dns_ip);
+   } else {
+       // Bridge mode: Disable DHCP server on AP, let upstream handle it
+       // But keep the interface up for bridging
+       os_printf("Bridge mode: DHCP server disabled on AP interface\r\n");
+   }
 
    // Enter any saved dhcp enties if they are in this network
    for (i = 0; i<config.dhcps_entries; i++) {
@@ -3376,6 +3425,18 @@ struct espconn *pCon;
 	  config.auto_connect = 1;
 	  config.ap_open = os_strncmp(config.password, "none", 4) == 0;
 	}
+    }
+
+    // Bridge mode configuration
+    if (config.bridge_mode) {
+        // In bridge mode, disable NAT
+        config.nat_enable = 0;
+        os_printf("Bridge mode: NAT disabled\r\n");
+        // Ensure AP is on for bridging
+        if (!config.ap_on) {
+            config.ap_on = 1;
+            os_printf("Bridge mode: AP enabled\r\n");
+        }
     }
 
     // Configure the AP and start it, if required

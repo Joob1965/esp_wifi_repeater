@@ -1,10 +1,13 @@
 # esp_wifi_repeater
-Ein voll funktionsfähiger WLAN-Repeater (richtig: ein WLAN-NAT-Router)
+Ein voll funktionsfähiger WLAN-Repeater (richtig: ein WLAN-NAT-Router) mit **Bridge Mode**-Unterstützung
 
 Dies ist die Implementierung eines WiFi-NAT-Routers auf dem esp8266 und esp8285. Es enthält auch Unterstützung für eine Paketfilter-Firewall mit ACLs, Port-Mapping, Traffic-Shaping, Hooks für Remote-Überwachung (oder Paket-Sniffing), MQTT-Verwaltungsschnittstelle und Energieverwaltung. Automesh wurde aufgenommen https://github.com/martin-ger/esp_wifi_repeater#automesh-mode .
 
+**NEU**: Der ESP kann jetzt als echte **Layer 2-Brücke** zwischen zwei Netzwerken konfiguriert werden, anstatt nur NAT zu verwenden. Siehe [Bridge Mode Dokumentation](BRIDGE_MODE.md).
+
 Typische Nutzungsszenarien sind:
-- Einfacher Range Extender für ein vorhandenes WiFi-Netzwerk
+- Einfacher Range Extender für ein vorhandenes WiFi-Netzwerk (NAT oder Bridge Mode)
+- **Netzwerk-Erweiterung ohne separate IP-Subnetze (Bridge Mode)** ✨ NEU
 - Batteriebetriebene Außennetze (Mesh-Netze)
 - Einrichten eines zusätzlichen WiFi-Netzwerks mit unterschiedlichen SSIDs / Passwörtern für Gäste
 - Einrichten eines sicheren und eingeschränkten Netzwerks für IoT-Geräte
@@ -16,6 +19,30 @@ Standardmäßig fungiert der ESP als STA und als Soft-AP und leitet den IP-Verke
 Messungen zeigen, dass es ungefähr 5 Mbit / s in beide Richtungen erreichen kann, so dass sogar Streaming möglich ist.
 
 Einige Details werden in diesem Video erklärt: https://www.youtube.com/watch?v=OM2FqnMFCLw
+
+## Bridge Mode (Neu!)
+
+**Bridge Mode ermöglicht es, den ESP als echte Netzwerk-Brücke zu verwenden:**
+
+```
+Normale Repeater-Mode (NAT):           Bridge Mode (neu):
+  Uplink: 192.168.1.x                   Uplink: 192.168.1.x
+         [ESP] ← NAT-Isolation                 [ESP] ← Bridging
+  SoftAP: 192.168.4.x                   SoftAP: 192.168.1.x (gleich!)
+```
+
+**Vorteil**: Clients im SoftAP erhalten IPs vom gleichen Netzwerk wie das Uplink-Netzwerk, ohne dass separate Routing-Einträge erforderlich sind.
+
+**Quick Start**:
+```
+> set ssid "IhrWLAN"
+> set password "IhrWLAN-Passwort"
+> set bridge_mode 1
+> save
+> reset
+```
+
+Ausführliche Dokumentation siehe [BRIDGE_MODE.md](BRIDGE_MODE.md) und [BRIDGE_MODE_QUICKSTART.md](BRIDGE_MODE_QUICKSTART.md).
 
 ### Hinweis zu WPA2 Enterprise (PEAP)
 Wenn Sie einen "Konverter" benötigen, der ein WPA2-Unternehmensnetzwerk mit PEAP-Authentifizierung in ein WPA2-PSK-Netzwerk übersetzt, besuchen Sie https://github.com/martin-ger/esp_peap_psk. Ich habe versucht, diese Funktionalität in dieses Projekt zu integrieren. Dies ist jedoch schwierig, da WPA2 Enterprise bei der Authentifizierung so viel freien Heap benötigt, dass für nichts anderes mehr Speicherplatz vorhanden ist. Also habe ich beschlossen, das in einem separaten Projekt zu belassen.

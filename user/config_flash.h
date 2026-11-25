@@ -62,6 +62,7 @@ typedef struct
     uint32_t	am_sleep_time;	// Seconds for sleeping
 
     uint8_t	nat_enable;	// Enable NAT on the AP netif;
+    uint8_t	bridge_mode;	// Enable bridge mode (disables NAT, requires same subnet)
     ip_addr_t	network_addr;	// Address of the internal network
     ip_addr_t	dns_addr;	// Optional: address of the dns server
 
