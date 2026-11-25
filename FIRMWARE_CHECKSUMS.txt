@@ -1,0 +1,19 @@
+ESP8266 WiFi Repeater - Firmware Checksums
+================================================================================
+
+firmware_combined.bin
+  SHA256: 3475a29b93e8d9cd1958b142375572dc15fb0bcbf9bcd21fc2f79864198c2711
+  Size:   304202 bytes (297.1 KB)
+
+firmware/0x00000.bin
+  SHA256: 280724f195026ef8ad184d1104dc4db332f5024ddbede061e1add970bc52af03
+  Size:   38048 bytes (37.2 KB)
+
+firmware/0x10000.bin
+  SHA256: d53d497fdef40de2aba22cf1fc2bf97112441dfeb435e7d4624575d413aaaf53
+  Size:   266004 bytes (259.8 KB)
+
+firmware/esp_init_data_default_v08_vdd33.bin
+  SHA256: 6cc371fcd0188d1bb66d531b2517abdbf6343126aef16217f2d2dd81fadffb0f
+  Size:   128 bytes (0.1 KB)
+
