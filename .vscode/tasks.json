@@ -225,6 +225,49 @@
                 "echo": false,
                 "reveal": "silent"
             }
+        },
+        {
+            "label": "⚡ UPLOAD ZU COM8 (Wemos v3)",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "esptool",
+                "-p",
+                "COM8",
+                "-b",
+                "460800",
+                "write_flash",
+                "0",
+                "firmware_combined.bin"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "🔍 COM8 Test (Chip ID)",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-m",
+                "esptool",
+                "-p",
+                "COM8",
+                "chip_id"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
         }
     ],
     "inputs": []
