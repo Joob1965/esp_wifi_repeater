@@ -1,0 +1,231 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🔨 PlatformIO: Build (Debug)",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🏭 PlatformIO: Build (Production)",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_production"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "📤 PlatformIO: Upload Firmware",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "-t",
+                "upload"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "💾 PlatformIO: Upload Web Files (SPIFFS)",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "-t",
+                "uploadfs"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🚀 PlatformIO: Build & Upload",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "-t",
+                "upload"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            },
+            "dependsOn": [
+                "🔨 PlatformIO: Build (Debug)"
+            ]
+        },
+        {
+            "label": "🌐 PlatformIO: Full Deploy",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "pio run -e esp8266_debug -t upload && pio run -e esp8266_debug -t uploadfs"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "📡 PlatformIO: Serial Monitor (115200)",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "device",
+                "monitor",
+                "-b",
+                "115200"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*)$",
+                    "line": 0
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^--- Miniterm on.*",
+                    "endsPattern": "^--- exit ---$"
+                }
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🔧 PlatformIO: Device List",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "device",
+                "list"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🗑️ PlatformIO: Clean Build",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "--target",
+                "clean"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🔄 PlatformIO: Full Rebuild",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "--target",
+                "rebuild"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "ℹ️ PlatformIO: Verbose Build",
+            "type": "shell",
+            "command": "pio",
+            "args": [
+                "run",
+                "-e",
+                "esp8266_debug",
+                "-v"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "🌐 Open Web UI",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-c",
+                "python -m webbrowser 'http://192.168.4.1/' || echo 'ESP nicht erreichbar'"
+            ],
+            "presentation": {
+                "echo": false,
+                "reveal": "silent"
+            }
+        }
+    ],
+    "inputs": []
+}

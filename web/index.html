@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP8266 WiFi Repeater - Bridge Mode Control</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231a1a2e' width='100' height='100'/><circle cx='50' cy='50' r='40' fill='%2316213e'/><path d='M50 20 L60 30 L40 30 Z' fill='%2300d4ff'/></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 100 100">
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#0099cc;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect fill="url(#logoGrad)" width="100" height="100" rx="10"/>
+                    <circle cx="50" cy="40" r="12" fill="#1a1a2e"/>
+                    <path d="M50 60 L35 75 L50 70 L65 75 Z" fill="#1a1a2e"/>
+                    <circle cx="30" cy="45" r="6" fill="#1a1a2e" opacity="0.7"/>
+                    <circle cx="70" cy="45" r="6" fill="#1a1a2e" opacity="0.7"/>
+                </svg>
+                <h1>WiFi Repeater</h1>
+            </div>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span class="status-text" id="statusText">Verbindung wird hergestellt...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+        <!-- Mode Selection Card -->
+        <div class="card card-mode">
+            <h2>Betriebsmodus</h2>
+            <div class="mode-tabs">
+                <button class="tab-btn active" data-mode="bridge" id="bridgeTab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M6 4h12v2H6V4zm0 4h12v8H6V8zm2 2v4m2 0v-4m2 0v4m2 0v-4m2 0v4M4 16h16v2H4v-2z"/>
+                    </svg>
+                    <span>Bridge Mode</span>
+                </button>
+                <button class="tab-btn" data-mode="nat" id="natTab">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M12 7v5l3 1.5"/>
+                    </svg>
+                    <span>NAT Mode</span>
+                </button>
+            </div>
+
+            <div class="mode-content">
+                <div class="toggle-switch-container">
+                    <label for="modeToggle" class="toggle-label">
+                        <input type="checkbox" id="modeToggle" class="toggle-input">
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-text">Bridge Mode aktivieren</span>
+                    </label>
+                </div>
+                <p class="mode-description" id="modeDescription">
+                    Bridge Mode verbindet zwei WLAN-Netzwerke auf Layer 2. Der ESP8266 agiert als transparente Brücke.
+                </p>
+            </div>
+        </div>
+
+        <!-- WiFi Configuration Card -->
+        <div class="card card-wifi">
+            <h2>WiFi Konfiguration</h2>
+            
+            <div class="form-group">
+                <label for="ssid">SSID (Uplink Netzwerk)</label>
+                <input type="text" id="ssid" placeholder="Netzwerkname eingeben" class="input-field">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Passwort</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" placeholder="Passwort eingeben" class="input-field">
+                    <button class="btn-icon" id="togglePassword" title="Passwort anzeigen">👁️</button>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="apSsid">AP SSID (Hotspot)</label>
+                    <input type="text" id="apSsid" placeholder="AP Name" class="input-field">
+                </div>
+                <div class="form-group">
+                    <label for="apPassword">AP Passwort</label>
+                    <input type="text" id="apPassword" placeholder="AP Passwort" class="input-field">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="apOpen" class="checkbox-input">
+                    <span>AP ohne Passwort (offen)</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Tuning Controls Card -->
+        <div class="card card-tuning">
+            <h2>Feineinstellungen</h2>
+            
+            <!-- Signal Strength -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label for="txPower">TX Power (Sendeleistung)</label>
+                    <span class="slider-value" id="txPowerValue">20.5 dBm</span>
+                </div>
+                <input type="range" id="txPower" min="0" max="20.5" step="0.5" value="20.5" class="slider">
+                <p class="slider-description">Höhere Werte = größere Reichweite, höherer Stromverbrauch</p>
+            </div>
+
+            <!-- Transmit Power -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label for="dataRate">Datenrate</label>
+                    <span class="slider-value" id="dataRateValue">54 Mbps (11n)</span>
+                </div>
+                <div class="rate-selector">
+                    <select id="dataRate" class="select-field">
+                        <option value="1">1 Mbps (11b)</option>
+                        <option value="2">2 Mbps (11b)</option>
+                        <option value="5">5.5 Mbps (11b)</option>
+                        <option value="11">11 Mbps (11b)</option>
+                        <option value="6">6 Mbps (11g)</option>
+                        <option value="9">9 Mbps (11g)</option>
+                        <option value="12">12 Mbps (11g)</option>
+                        <option value="18">18 Mbps (11g)</option>
+                        <option value="24">24 Mbps (11g)</option>
+                        <option value="36">36 Mbps (11g)</option>
+                        <option value="48">48 Mbps (11g)</option>
+                        <option value="54">54 Mbps (11g)</option>
+                        <option value="65">65 Mbps (11n MCS0)</option>
+                        <option value="13">130 Mbps (11n MCS7)</option>
+                    </select>
+                </div>
+                <p class="slider-description">Niedriger = stabiler aber langsamer, höher = schneller aber anfälliger</p>
+            </div>
+
+            <!-- DHCP Timeout -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label for="dhcpTimeout">DHCP Timeout</label>
+                    <span class="slider-value" id="dhcpTimeoutValue">60 Sekunden</span>
+                </div>
+                <input type="range" id="dhcpTimeout" min="10" max="300" step="10" value="60" class="slider">
+                <p class="slider-description">Zeit bis Lease abläuft (Bridge Mode relevant)</p>
+            </div>
+
+            <!-- WiFi Channel -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <label for="channel">WiFi Kanal</label>
+                    <span class="slider-value" id="channelValue">Auto</span>
+                </div>
+                <div class="channel-selector">
+                    <select id="channel" class="select-field">
+                        <option value="0">Auto (1-13)</option>
+                        <option value="1">Kanal 1 (2412 MHz)</option>
+                        <option value="2">Kanal 2 (2417 MHz)</option>
+                        <option value="3">Kanal 3 (2422 MHz)</option>
+                        <option value="4">Kanal 4 (2427 MHz)</option>
+                        <option value="5">Kanal 5 (2432 MHz)</option>
+                        <option value="6">Kanal 6 (2437 MHz)</option>
+                        <option value="7">Kanal 7 (2442 MHz)</option>
+                        <option value="8">Kanal 8 (2447 MHz)</option>
+                        <option value="9">Kanal 9 (2452 MHz)</option>
+                        <option value="10">Kanal 10 (2457 MHz)</option>
+                        <option value="11">Kanal 11 (2462 MHz)</option>
+                        <option value="12">Kanal 12 (2467 MHz)</option>
+                        <option value="13">Kanal 13 (2472 MHz)</option>
+                    </select>
+                </div>
+                <p class="slider-description">In vielen Regionen sind nur Kanäle 1-11 erlaubt</p>
+            </div>
+
+            <!-- NAPT Enable (nur im NAT Mode) -->
+            <div class="slider-group" id="naptGroup" style="display: none;">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="naptEnable" class="checkbox-input" checked>
+                    <span>NAPT aktivieren (NAT mit Port Translation)</span>
+                </label>
+                <p class="slider-description">Verbesserte NAT-Funktionalität für komplexere Szenarien</p>
+            </div>
+        </div>
+
+        <!-- Status Information Card -->
+        <div class="card card-status">
+            <h2>Geräteinformationen</h2>
+            <div class="status-grid">
+                <div class="status-item">
+                    <span class="status-label">Firmware Version</span>
+                    <span class="status-value" id="firmwareVersion">1.8.7-bridge</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">MAC Adresse (STA)</span>
+                    <span class="status-value" id="macSta">--:--:--:--:--:--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">MAC Adresse (AP)</span>
+                    <span class="status-value" id="macAp">--:--:--:--:--:--</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">IP Adresse (STA)</span>
+                    <span class="status-value" id="ipSta">Nicht verbunden</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">IP Adresse (AP)</span>
+                    <span class="status-value" id="ipAp">192.168.4.1</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Verbindungsstatus</span>
+                    <span class="status-value" id="connectionStatus">Nicht verbunden</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons Card -->
+        <div class="card card-actions">
+            <div class="button-group">
+                <button class="btn btn-primary" id="saveBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                    </svg>
+                    Speichern & Neu Starten
+                </button>
+                <button class="btn btn-secondary" id="resetBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 6.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v4l5-5-5-5v4z"/>
+                    </svg>
+                    Neu Starten
+                </button>
+                <button class="btn btn-tertiary" id="defaultBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                    </svg>
+                    Reset auf Standard
+                </button>
+            </div>
+        </div>
+
+        <!-- Debug Console Card -->
+        <div class="card card-debug">
+            <h2>Debug Konsole</h2>
+            <div class="console-container" id="console">
+                <div class="console-line">Console bereit...</div>
+            </div>
+            <div class="console-input-group">
+                <input type="text" id="consoleInput" placeholder="CLI Befehl eingeben..." class="console-input">
+                <button id="consoleSendBtn" class="btn-icon" title="Befehl senden">↵</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 ESP8266 WiFi Repeater mit Bridge Mode | Firmware 1.8.7</p>
+        <p class="footer-links">
+            <a href="#" onclick="toggleDebug()">Debug Mode</a> | 
+            <a href="#" onclick="showAbout()">Über</a>
+        </p>
+    </footer>
+
+    <!-- Notifications -->
+    <div id="notification" class="notification"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -393,3 +393,107 @@ Wenn der "QIO" -Modus auf Ihrem Gerät fehlschlägt, versuchen Sie stattdessen "
 - Aufgrund der Einschränkungen der ESP-SoftAP-Implementierung sind maximal 8 Stationen gleichzeitig verbunden.
 - Der ESP8266 benötigt eine gute Stromversorgung, da er während des Sendens Stromspitzen von bis zu 170 mA erzeugt (typischer Durchschnittsverbrauch liegt bei ca. 70 mA, wenn WLAN aktiviert ist). Überprüfen Sie zuerst die Stromversorgung, wenn Ihr ESP instabil läuft und von Zeit zu Zeit neu startet. Ein großer Kondensator zwischen Vdd und Gnd kann helfen, wenn hier Probleme auftreten.
 - Alle nach dem 17. Oktober 2017 veröffentlichten Firmware-Versionen wurden mit der gepatchten Version des SDK 2.1.0 von Espressif erstellt, die den KRACK-Angriff (https://www.krackattacks.com/) abschwächt.
+
+---
+
+## 🚀 PlatformIO Build System
+
+Das Projekt nutzt **PlatformIO** für professionelles Firmware-Management:
+
+```bash
+# Debug Build flashen
+pio run -e esp8266_debug -t upload
+
+# Production Build
+pio run -e esp8266_production -t upload
+```
+
+👉 **Quick Start**: Siehe [PLATFORMIO_QUICKSTART.md](PLATFORMIO_QUICKSTART.md)  
+📖 **Vollständige Doku**: Siehe [PLATFORMIO_WEBUI_GUIDE.md](PLATFORMIO_WEBUI_GUIDE.md)
+
+### VSCode Integration
+
+Öffnen Sie die **Task Palette** (`Ctrl+Shift+P`) und nutzen Sie vordefinierte Tasks:
+- 🔨 Build
+- 📤 Upload Firmware
+- 💾 Upload Web Files
+- 📡 Serial Monitor
+- 🌐 Full Deploy
+
+---
+
+## 🌙 Web Interface mit Dark Design
+
+Modernes dunkles Webinterface unter `http://192.168.4.1/`:
+
+**Features:**
+- ✨ Cyan/Blau Farbschema
+- 🎚️ Feineinstellungs-Regler (TX Power, Kanal, Datenrate)
+- 🔄 Live Status-Anzeige
+- 🖥️ Debug Konsole
+- 📱 Responsive für Mobile
+
+**Feineinstellungen (Tuning):**
+- **TX Power**: 0-20.5 dBm (Reichweite vs. Stromverbrauch)
+- **Datenrate**: 1-130 Mbps (Geschwindigkeit vs. Stabilität)
+- **WiFi Kanal**: Auto oder spezifisch (1-13)
+- **DHCP Timeout**: 10-300 Sekunden
+- **NAPT**: NAT mit Port Translation
+
+---
+
+## ⚙️ Firmware Tuning-Parameter
+
+Neue konfigurierbare Parameter für optimale Performance:
+
+```c
+config->tx_power_raw      // 0-82 (= 0-20.5 dBm)
+config->dhcp_timeout      // 10-300 Sekunden
+config->channel           // 0 (Auto) oder 1-13
+config->data_rate         // Verschiedene Raten
+config->napt_enable       // 0/1
+```
+
+CLI-Befehle:
+```bash
+set tx_power 20.5
+set dhcp_timeout 60
+set channel 6
+set data_rate 54
+set napt 1
+```
+
+---
+
+## 📂 Neue Dateien
+
+```
+web/
+  ├── index.html         # Weboberfläche
+  ├── style.css          # Dunkles Design
+  └── app.js             # Interaktive App
+
+.vscode/
+  ├── tasks.json         # VSCode Build Tasks
+  └── settings.json      # Editor Einstellungen
+
+platformio.ini            # PlatformIO Konfiguration
+PLATFORMIO_QUICKSTART.md  # 5-Minuten Quick Start
+PLATFORMIO_WEBUI_GUIDE.md # Vollständige Dokumentation
+```
+
+---
+
+## 🎯 Nächste Schritte
+
+1. Installieren Sie PlatformIO: `pip install platformio`
+2. Bauen Sie: `pio run -e esp8266_debug`
+3. Flashen Sie: `pio run -e esp8266_debug -t upload`
+4. Öffnen Sie: `http://192.168.4.1/`
+5. Konfigurieren Sie über die Weboberfläche
+
+---
+
+**Status**: 🌟 Production Ready  
+**Version**: 1.8.7 mit Bridge Mode + Web UI + Tuning  
+**Last Updated**: 2024-11-25

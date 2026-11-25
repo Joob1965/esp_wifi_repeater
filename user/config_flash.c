@@ -84,11 +84,18 @@ uint32_t reg0, reg1, reg3;
 
     config->nat_enable			= 1;
     config->bridge_mode			= 0;
+    config->napt_enable			= 1;
     IP4_ADDR(&config->network_addr, 192, 168, 4, 1);
     config->dns_addr.addr		= 0;  // use DHCP
     config->my_addr.addr		= 0;  // use DHCP   
     config->my_netmask.addr		= 0;  // use DHCP   
     config->my_gw.addr			= 0;  // use DHCP   
+    
+    /* Tuning Defaults */
+    config->tx_power_raw		= 82;  // 20.5 dBm (max)
+    config->dhcp_timeout		= 60;  // 60 seconds
+    config->channel				= 0;   // Auto
+    config->data_rate			= 54;  // 54 Mbps (11g)
 #ifdef PHY_MODE
     config->phy_mode			= 3;  // mode n
 #endif

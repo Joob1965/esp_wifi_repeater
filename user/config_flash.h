@@ -63,8 +63,15 @@ typedef struct
 
     uint8_t	nat_enable;	// Enable NAT on the AP netif;
     uint8_t	bridge_mode;	// Enable bridge mode (disables NAT, requires same subnet)
+    uint8_t	napt_enable;	// Enable NAPT (NAT with Port Translation)
     ip_addr_t	network_addr;	// Address of the internal network
     ip_addr_t	dns_addr;	// Optional: address of the dns server
+    
+    /* Tuning Parameters */
+    uint16_t	tx_power_raw;	// TX Power in units of 0.25 dBm (0-82 = 0-20.5 dBm)
+    uint16_t	dhcp_timeout;	// DHCP lease timeout in seconds
+    uint8_t	channel;		// WiFi channel (0=auto, 1-13)
+    uint8_t	data_rate;		// WiFi data rate (Mbps)
 
     ip_addr_t	my_addr;	// Optional (if not DHCP): IP address of the STA interface
     ip_addr_t	my_netmask;	// Optional (if not DHCP): IP netmask of the STA interface
