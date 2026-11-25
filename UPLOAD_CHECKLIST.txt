@@ -1,0 +1,250 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║          🔌 WEMOS LoLin NodeMCU v3 - Firmware Upload Checkliste             ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📱 GERÄTEINFORMATION
+
+Gerät:          Wemos LoLin NodeMCU v3
+Hersteller:     wemos.cc
+Chip:           ESP8266
+Flash-Speicher: 4 MB
+RAM:            160 KB
+USB-Anschluss:  Micro-USB
+USB-Chip:       CH340
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ VORBEREITUNG (Einmalig)
+
+☑️  Hardware vorbereiten
+    └─ Micro-USB Kabel besorgen
+    └─ Wemos LoLin NodeMCU v3 haben
+
+☑️  Software installieren
+    └─ Python 3 (https://www.python.org/)
+    └─ esptool: pip install esptool
+    └─ Firmware: firmware_combined.bin vorhanden
+    └─ Upload-Script: upload_firmware.py vorhanden
+
+☑️  Treiber installieren (Windows nur)
+    └─ CH340 USB Serial Treiber
+    └─ Download: https://github.com/WCHSoftware/ch341ser
+    └─ Oder: https://www.wemos.cc/en/latest/ch340_driver.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔌 VERBINDUNG ÜBERPRÜFEN
+
+☑️  Schritt 1: USB-Kabel anschließen
+    └─ Micro-USB in NodeMCU stecken
+    └─ Andere Ende in Computer-USB-Port
+    └─ Rote LED sollte leuchten (5V)
+
+☑️  Schritt 2: Port überprüfen
+    
+    Linux/macOS:
+      $ ls /dev/tty* | grep -E "USB|ACM"
+      Erwartet: /dev/ttyUSB0 oder /dev/ttyACM0
+    
+    Windows (PowerShell):
+      > Get-WmiObject win32_serialport | Select-Object Name
+      Erwartet: COM3, COM4, COM5, etc.
+    
+    Device Manager:
+      → Ports (COM & LPT)
+      → Suchen Sie nach "CH340" oder ähnlich
+
+☑️  Schritt 3: Verbindung testen
+    
+    Automatisch:
+      $ esptool.py chip_id
+      Erwartet: "Detecting chip type... ESP8266"
+    
+    Mit Port-Angabe:
+      $ esptool.py -p /dev/ttyUSB0 chip_id
+      oder
+      $ esptool.py -p COM3 chip_id
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 FIRMWARE UPLOAD
+
+☑️  Option 1: Automatisch (Empfohlen)
+    
+    $ cd /root/esp_wifi_repeater
+    $ python3 upload_firmware.py
+    
+    Das Script macht alles:
+    ✓ Port-Erkennung
+    ✓ Interaktive Bestätigung
+    ✓ Optional Backup
+    ✓ Upload durchführen
+    ✓ Verifikation
+    ✓ Neustart
+    
+    Dauer: ~15 Sekunden
+
+☑️  Option 2: Mit Port-Angabe
+    
+    Linux/macOS:
+      $ python3 upload_firmware.py --port /dev/ttyUSB0
+    
+    Windows:
+      $ python3 upload_firmware.py --port COM3
+
+☑️  Option 3: Bash-Script (Linux/macOS nur)
+    
+    $ ./upload_firmware.sh
+    oder
+    $ ./upload_firmware.sh 460800 /dev/ttyUSB0
+
+☑️  Option 4: Direkter esptool Befehl
+    
+    $ esptool.py -p /dev/ttyUSB0 -b 460800 write_flash 0x00000 firmware_combined.bin
+    
+    Windows:
+      $ esptool.py -p COM3 -b 460800 write_flash 0x00000 firmware_combined.bin
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 UPLOAD-FORTSCHRITT
+
+Erwartet:
+
+  Connecting...
+  Detecting chip type... ESP8266
+  Chip is esp8266
+  
+  Uploading stub...
+  Running stub...
+  
+  Writing at 0x00000... (5%)
+  Writing at 0x00000... (10%)
+  ...
+  Writing at 0x00000... (100%)
+  
+  Wrote 304202 bytes
+  
+  Leaving...
+  Hard resetting via RTS pin...
+  
+  ✅ Success!
+
+Dauer: ~10 Sekunden bei 460800 Baud
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ NACH DEM UPLOAD
+
+☑️  Schritt 1: Warten
+    └─ Mindestens 5 Sekunden warten
+    └─ Rote LED sollte blinken
+    └─ NodeMCU startet automatisch neu
+
+☑️  Schritt 2: Web-Interface öffnen
+    
+    Öffnen Sie im Browser:
+      http://192.168.4.1/
+      oder
+      http://esp8266.local/
+    
+    Falls nicht erreichbar:
+      → NodeMCU mit Reset-Taste neu starten
+      → Oder USB abziehen/wieder anstecken
+      → Dann 10 Sekunden warten
+
+☑️  Schritt 3: WiFi konfigurieren
+    
+    Im Web-Interface:
+      1. Uplink WiFi SSID eingeben
+      2. Uplink Passwort eingeben
+      3. AP SSID eingeben
+      4. AP Passwort eingeben
+      5. Bridge oder NAT Mode wählen
+      6. "Speichern & Neu Starten" klicken
+
+☑️  Schritt 4: Betrieb starten
+    
+    Nach Neustart:
+      ✓ NodeMCU-Hotspot ist sichtbar
+      ✓ Verbindung möglich
+      ✓ Bridging/NAT aktiv
+      ✓ Web-Interface erreichbar
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆘 SCHNELLE PROBLEMLÖSUNG
+
+PROBLEM: "Port nicht gefunden"
+LÖSUNG:
+  → Ist USB-Kabel angesteckt?
+  → Leuchtet rote LED?
+  → Mit anderem Kabel versuchen
+  → Treiber installieren (Windows: CH340)
+  → Port manuell angeben: --port /dev/ttyUSB0
+
+PROBLEM: "Timeout beim Upload"
+LÖSUNG:
+  → Niedrigere Baudrate: -b 115200
+  → NodeMCU neu starten (USB ab/an)
+  → Reset-Taste drücken (falls vorhanden)
+
+PROBLEM: "Firmware funktioniert nicht"
+LÖSUNG:
+  → USB ausstecken, 10 Sekunden warten
+  → Wieder anstecken
+  → Reset-Taste drücken
+  → Flash komplett löschen: esptool.py erase_flash
+  → Neu flashen
+
+PROBLEM: "esptool nicht gefunden"
+LÖSUNG:
+  → pip install esptool
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 DOKUMENTATION
+
+Lesen Sie auch:
+  → WEMOS_NODEMCU_V3_UPLOAD.md - Vollständiger Guide
+  → DEPLOY_FIRMWARE.md - Allgemeiner Deployment-Guide
+  → FIRMWARE_BINARY.md - Firmware-Details
+  → GETTING_STARTED.md - 5-Min Quick Start
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ZUSAMMENFASSUNG
+
+1. USB-Kabel anstecken
+2. esptool installieren: pip install esptool
+3. Firmware hochladen: python3 upload_firmware.py
+4. Browser öffnen: http://192.168.4.1/
+5. Fertig!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 BENÖTIGEN SIE HILFE?
+
+Häufige Ports:
+  Linux:   /dev/ttyUSB0 oder /dev/ttyACM0
+  macOS:   /dev/tty.usbserial-14130 oder /dev/tty.wchusbserial1410
+  Windows: COM3, COM4, COM5
+
+Typische Baudrates:
+  115200  - Sicher, aber langsam
+  230400  - Medium
+  460800  - Standard (schnell)
+  921600  - Sehr schnell, aber manchmal Fehler
+
+Hilfreich:
+  $ esptool.py -p /dev/ttyUSB0 chip_id
+  $ esptool.py -p /dev/ttyUSB0 flash_id
+  $ esptool.py -p /dev/ttyUSB0 read_flash 0x00000 256
+
+═════════════════════════════════════════════════════════════════════════════════
+
+                  ✅ ALLES VORBEREITET - VIEL ERFOLG! 🚀
+
+═════════════════════════════════════════════════════════════════════════════════
